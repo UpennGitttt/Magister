@@ -1,0 +1,683 @@
+/* Task Detail — P3 (Swiss + Sage) styling.
+ *
+ * Layout (top → bottom): topbar header · tree+detail split · timeline.
+ * Tokens come from styles/tokens.css. No drop shadows, hard hairlines,
+ * 4px radii throughout.
+ */
+
+/* Task detail wants edge-to-edge layout (mockup §main grid: auto 1fr).
+ * Override the default .app-main padding so the topbar/panels/timeline
+ * border-bottom hairlines reach the viewport edges, and force the page
+ * itself into a height-100% grid with rows [topbar][panels (fill)]. */
+.app-main:has(.page > .task-header) {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* On mobile, the global .app-mobile-bar lives directly under .app-main
+   with `margin: -16px -16px 16px` baked in (it expects a 16px padded
+   parent). Since this page zeroes that padding, neutralize the negative
+   margins so the bar doesn't clip off the top edge — and the global
+   actions slot vertically aligns against a clean 56px bar. */
+@media (max-width: 880px) {
+  .app-main:has(.page > .task-header) > .app-mobile-bar {
+    margin: 0 0 0 0;
+  }
+}
+
+.page:has(> .task-header) {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* ── Topbar header ─────────────────────────────────────────────── */
+.task-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.task-header-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.task-header-back:hover {
+  background: var(--paper-2);
+  color: var(--ink);
+}
+
+.task-header-title {
+  font-family: var(--font-geist);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.task-header-short-id {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+
+.task-header-task-id {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Spec §5.10 — Full Trace badge. Click opens FullTraceModal. */
+.task-header-trace-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  background: var(--paper-3);
+  border: 1px solid var(--paper-4, var(--paper-3));
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+}
+.task-header-trace-badge:hover {
+  color: var(--ink);
+  background: var(--paper-2, var(--paper-3));
+}
+
+.task-header-state {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+.task-header-state--run { background: var(--sage); color: var(--paper); }
+.task-header-state--run::before { content: "● "; }
+.task-header-state--done { background: var(--paper-3); color: var(--ink); }
+.task-header-state--fail { background: var(--red); color: var(--paper); }
+.task-header-state--neutral { background: var(--paper-3); color: var(--ink-3); }
+
+/* ── Panels layout ─────────────────────────────────────────────── */
+.task-detail-panels {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 0;
+  overflow: hidden;
+  margin: 0;
+  gap: 0;
+}
+
+.task-detail-split {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Tree pane ─────────────────────────────────────────────────── */
+.task-tree-panel {
+  border-right: 1px solid var(--line);
+  background: var(--paper);
+  overflow-y: auto;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  min-height: 0;
+  height: auto;
+}
+
+.task-tree {
+  padding: 14px 0;
+}
+
+.task-tree-head {
+  padding: 0 18px 11px;
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 8px;
+}
+.task-tree-head-title {
+  font-family: var(--font-geist);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.task-tree-head-sub {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+
+.task-tree-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-tree-node {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  align-items: baseline;
+  gap: 7px;
+  padding: 5px 18px 5px 6px;
+  font-size: 12.5px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.task-tree-node:hover { background: var(--paper-2); }
+.task-tree-node--active {
+  background: var(--paper-2);
+  border-left: 3px solid var(--sage);
+  padding-left: 3px;
+}
+.task-tree-node--l1 { padding-left: 6px; }
+.task-tree-node--l2 { padding-left: 24px; }
+.task-tree-node--l3 { padding-left: 42px; }
+.task-tree-node--l4 { padding-left: 60px; }
+.task-tree-node--active.task-tree-node--l2 { padding-left: 21px; }
+.task-tree-node--active.task-tree-node--l3 { padding-left: 39px; }
+.task-tree-node--active.task-tree-node--l4 { padding-left: 57px; }
+
+.task-tree-node__chevron {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-4);
+  text-align: center;
+}
+.task-tree-node__label {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.task-tree-node__kind {
+  font-weight: 600;
+  color: var(--sage-deep);
+}
+.task-tree-node__ticks {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--ink-3);
+}
+
+/* ── Detail pane ───────────────────────────────────────────────── */
+.task-detail-panel-side {
+  background: var(--paper);
+  border-radius: 0;
+  padding: 18px 24px;
+  box-shadow: none;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.node-detail-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--ink-3);
+  font-family: var(--font-geist);
+  font-size: 13px;
+}
+
+.task-detail-content { display: flex; flex-direction: column; }
+
+.task-detail-head {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.task-detail-title {
+  font-family: var(--font-geist);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+.task-detail-sub {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+.task-detail-kv {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 6px 18px;
+  font-size: 12.5px;
+  margin-bottom: 14px;
+}
+.task-detail-kv__k {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-top: 1px;
+}
+.task-detail-kv__v {
+  font-family: var(--font-geist);
+  color: var(--ink);
+}
+.task-detail-kv__v--mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.task-detail-section { margin-bottom: 16px; }
+.task-detail-section__head {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+.task-detail-code {
+  background: var(--paper-2);
+  border-left: 3px solid var(--sage);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 9px 12px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+/* ── Sidebar lists (Artifacts / Recent events) ──────────────────── */
+.task-detail-list {
+  display: flex;
+  flex-direction: column;
+}
+.task-detail-list__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.task-detail-list__row:last-child { border-bottom: none; }
+
+.task-detail-list__primary {
+  font-family: var(--font-geist);
+  font-size: 12px;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.task-detail-list__primary--mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.task-detail-list__secondary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-geist);
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.task-detail-list__summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.task-detail-list__time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-4);
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.task-detail-event-type {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.task-detail-event-type--error    { color: var(--red); }
+.task-detail-event-type--decision { color: var(--ochre); }
+.task-detail-event-type--complete { color: var(--sage-deep); }
+.task-detail-event-type--muted    { color: var(--ink-3); }
+
+/* ── Timeline ──────────────────────────────────────────────────── */
+.task-timeline-panel {
+  background: var(--paper-2);
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  padding: 12px 24px 14px;
+  min-height: 160px;
+  max-height: 50vh;
+  overflow-y: auto;
+  box-shadow: none;
+}
+
+.timeline-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.timeline-head__title {
+  font-family: var(--font-geist);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.timeline-head__sub {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.timeline-axis {
+  height: 64px;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.timeline-axis__tick {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+}
+.timeline-axis__tick--live { background: var(--sage); }
+.timeline-axis__tick--tool { background: var(--blue); }
+.timeline-axis__tick--appr { background: var(--ochre); }
+.timeline-axis__tick--done { background: var(--ink-3); }
+.timeline-axis__tick--fail { background: var(--red); }
+.timeline-axis__label {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.timeline-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 22px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+.timeline-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.timeline-legend__sw {
+  width: 9px;
+  height: 9px;
+  border-radius: 1px;
+}
+.timeline-legend__sw--live { background: var(--sage); }
+.timeline-legend__sw--tool { background: var(--blue); }
+.timeline-legend__sw--appr { background: var(--ochre); }
+.timeline-legend__sw--done { background: var(--ink-3); }
+
+.timeline-list {
+  max-height: none;
+}
+.timeline-section-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-3);
+  margin: 14px 0 8px;
+  cursor: pointer;
+  list-style: none;
+  display: inline-block;
+}
+.timeline-section-title::-webkit-details-marker { display: none; }
+.timeline-events-details {
+  margin-top: 4px;
+}
+.timeline-events-details[open] .timeline-section-title::after {
+  content: " ▾";
+  color: var(--ink-4);
+}
+.timeline-events-details:not([open]) .timeline-section-title::after {
+  content: " ▸";
+  color: var(--ink-4);
+}
+.timeline-loading,
+.timeline-error,
+.timeline-empty {
+  font-family: var(--font-geist);
+  font-size: 13px;
+  color: var(--ink-3);
+  padding: 16px 0;
+}
+.timeline-error { color: var(--red); }
+
+.timeline-event {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-softer);
+  align-items: baseline;
+}
+.timeline-event:hover { background: transparent; }
+.timeline-event-highlighted {
+  background: var(--paper-2);
+  border-left: 3px solid var(--sage);
+  padding-left: 8px;
+}
+.timeline-event-expandable { cursor: pointer; }
+
+.timeline-event-time {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  min-width: 56px;
+}
+.timeline-event-icon { font-size: 13px; }
+.timeline-event-type {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--paper-2);
+  padding: 1px 5px;
+  border-radius: 2px;
+  color: var(--ink);
+  font-weight: 600;
+  min-width: 0;
+}
+.timeline-event-detail {
+  font-family: var(--font-geist);
+  font-size: 12px;
+  color: var(--ink-2);
+  flex: 1;
+  min-width: 0;
+}
+.timeline-event-duration {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+}
+.timeline-event-expanded {
+  width: 100%;
+  background: var(--paper-2);
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+  color: var(--ink-2);
+}
+
+.timeline-turn-group {
+  margin-bottom: 10px;
+  border-left: 1px solid var(--line-softer);
+  padding-left: 12px;
+}
+.timeline-turn-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.timeline-turn-label { font-weight: 700; color: var(--sage-deep); }
+.timeline-turn-duration {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+}
+.timeline-turn-complete { opacity: 0.7; }
+
+/* ── Mobile ────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .task-detail-split { grid-template-columns: 1fr; }
+}
+@media (max-width: 880px) {
+  /* Stack everything in a single column so no horizontal scroll.
+     Allow the page wrapper to scroll naturally — the desktop layout
+     locks overflow: hidden on .app-main and inner panels to keep the
+     3-pane split from spilling, but on mobile we want vertical scroll
+     across the whole stack. */
+  .app-main:has(.page > .task-header) {
+    overflow: auto;
+  }
+  .page:has(> .task-header) {
+    grid-template-rows: auto auto;
+    overflow: visible;
+  }
+  .task-detail-panels {
+    grid-template-rows: auto auto;
+    overflow: visible;
+  }
+  .task-detail-split {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  /* Tree → collapsible, default-collapsed via a CSS-only details
+     pattern would require markup changes. Instead, cap its height
+     so it doesn't dominate the viewport, give it its own scroll, and
+     visually anchor it as the top section. The user can still scroll
+     within it to see deep trees. */
+  .task-tree-panel {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    max-height: 30vh;
+    overflow-y: auto;
+  }
+
+  .task-detail-panel-side {
+    padding: var(--mobile-panel-padding, 14px);
+    overflow-y: visible;
+    max-height: none;
+  }
+
+  /* Timeline: keep at the bottom, give it a sensible cap so on long
+     timelines the user can scroll within rather than the whole page
+     ballooning. Drop the desktop 50vh cap which fights the wrapped
+     layout. */
+  .task-timeline-panel {
+    max-height: none;
+    overflow-y: visible;
+    padding: 12px var(--mobile-panel-padding, 14px);
+    min-height: 0;
+  }
+
+  /* Task header: compress label spacing on phones. The taskId chip
+     can overflow on narrow viewports — let it wrap to a second line
+     instead of pushing the state pill off-screen. */
+  .task-header {
+    padding: 10px var(--mobile-page-padding, 16px);
+    flex-wrap: wrap;
+    gap: 8px;
+    row-gap: 4px;
+  }
+  .task-header-title {
+    font-size: 14px;
+    flex: 1 1 100%;
+    order: 2;
+  }
+  .task-header-back {
+    order: 1;
+  }
+  .task-header-task-id {
+    max-width: 100%;
+  }
+
+  /* Timeline event row: at narrow widths the time / icon / type /
+     detail row stays on one line via flex-wrap (already set), but the
+     detail text can be cramped. Bump min-width so it wraps onto its
+     own line instead of squeezing to ~80px. */
+  .timeline-event-detail {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+}

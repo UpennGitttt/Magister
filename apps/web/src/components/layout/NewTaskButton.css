@@ -1,0 +1,226 @@
+/*
+ * NewTaskButton + dialog styles. Spec §6.1.
+ */
+
+.magister-new-task-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-geist, "Geist", -apple-system, sans-serif);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.magister-new-task-btn:hover {
+  background: var(--ink-2);
+}
+
+.magister-new-task-btn:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.magister-new-task-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 22, 20, 0.42);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.magister-new-task-dialog {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  width: min(520px, 92vw);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-geist, "Geist", -apple-system, sans-serif);
+  color: var(--ink);
+}
+
+.magister-new-task-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.magister-new-task-dialog__head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.magister-new-task-dialog__close {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: var(--ink-3);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  border-radius: var(--radius, 4px);
+}
+
+.magister-new-task-dialog__body {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.magister-new-task-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.magister-new-task-field__label {
+  font-size: 10px;
+  font-family: var(--font-mono, "Geist Mono", monospace);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.magister-new-task-field__input {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  background: var(--paper-2);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.magister-new-task-field__input:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 1px;
+}
+
+.magister-new-task-toggles {
+  display: flex;
+  gap: 8px;
+}
+
+.magister-new-task-toggle {
+  appearance: none;
+  border: 1px solid var(--line-soft);
+  background: var(--paper-2);
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.magister-new-task-toggle[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.magister-new-task-error {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--red);
+}
+
+.magister-new-task-dialog__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.magister-new-task-cancel,
+.magister-new-task-submit {
+  appearance: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.magister-new-task-cancel {
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  color: var(--ink-2);
+}
+
+.magister-new-task-submit {
+  background: var(--sage);
+  color: var(--paper);
+  border: 1px solid var(--sage-deep, var(--sage));
+}
+
+.magister-new-task-submit:disabled,
+.magister-new-task-cancel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Mobile: full-screen dialog so the keyboard + viewport zoom don't
+   clip the textarea / footer buttons. Reuses the existing 880px
+   breakpoint (CLAUDE.md mobile contract) — no new breakpoints. */
+@media (max-width: 880px) {
+  .magister-new-task-backdrop {
+    padding-top: 0;
+    align-items: stretch;
+  }
+  .magister-new-task-dialog {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  .magister-new-task-dialog__body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+  /* Collapse the topbar CTA to a compact icon-only `+` at narrow widths
+     so it doesn't crowd the ApprovalBell. Tap target enforced to
+     the same comfortable 44px target used by the mobile nav controls. */
+  .magister-new-task-btn {
+    font-size: 0;
+    padding: 0;
+    width: var(--touch-target-comfortable, 44px);
+    height: var(--touch-target-comfortable, 44px);
+    min-width: var(--touch-target-comfortable, 44px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .magister-new-task-btn::before {
+    content: "+";
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1;
+  }
+}

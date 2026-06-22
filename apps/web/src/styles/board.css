@@ -1,0 +1,724 @@
+.board-page {
+  min-height: 100%;
+  background: var(--bg, #f7f8fb);
+}
+
+.board-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+
+.board-refresh-btn {
+  border: 1px solid var(--border, #e6e9f0);
+  border-radius: 10px;
+  height: 34px;
+  padding: 0 12px;
+  background: var(--surface, #ffffff);
+  color: var(--text, #101828);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.board-refresh-btn:hover:not(:disabled) {
+  background: var(--surface-soft, #f3f5fa);
+}
+
+.board-refresh-btn:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.board-summary-bar {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid var(--border, #e6e9f0);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface, #ffffff);
+  color: var(--muted, #667085);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(16, 24, 40, 0.05));
+}
+
+.board-inline-error {
+  margin: 0;
+  color: var(--danger, #dc2626);
+  font-size: 13px;
+}
+
+.board-columns {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.board-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  background: var(--surface-soft, #f3f5fa);
+  border: 1px solid var(--border, #e6e9f0);
+  border-radius: var(--radius-lg, 16px);
+  padding: 10px;
+}
+
+.board-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 6px;
+}
+
+.board-column-header h2 {
+  margin: 0;
+  color: var(--text, #101828);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.board-column-count {
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e6e9f0);
+  background: var(--surface, #ffffff);
+  color: var(--muted, #667085);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.board-column-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.board-column-empty {
+  border: 1px dashed var(--border, #e6e9f0);
+  border-radius: 10px;
+  background: var(--surface, #ffffff);
+  padding: 14px;
+  color: var(--muted, #667085);
+  font-size: 13px;
+  text-align: center;
+}
+
+.task-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  border: 1px solid var(--border, #e6e9f0);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(16, 24, 40, 0.05));
+  padding: 12px;
+  cursor: pointer;
+}
+
+.task-card:hover {
+  background: var(--surface-soft, #f3f5fa);
+}
+
+.task-card-title {
+  color: var(--text, #101828);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.task-card-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted, #667085);
+  font-size: 12px;
+}
+
+.task-id {
+  font-weight: 600;
+}
+
+.task-source {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e6e9f0);
+  background: var(--surface, #ffffff);
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.task-source--web {
+  color: var(--primary, #635bff);
+}
+
+.task-source--feishu {
+  color: var(--success, #16a34a);
+}
+
+.task-source--cli {
+  color: var(--warning, #f59e0b);
+}
+
+.task-card-agent-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text, #101828);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.task-card-event {
+  margin: 0;
+  color: var(--muted, #667085);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.task-time {
+  color: var(--subtle, #98a2b3);
+  font-size: 12px;
+}
+
+@media (max-width: 1200px) {
+  .board-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile shared rules (apply regardless of horizontal/vertical layout
+   — the layout swap itself is handled by the @media block at the end
+   of this file). Touch-target sizing, compact card padding, etc. */
+@media (max-width: 880px) {
+  .board-column-empty {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .task-card {
+    min-height: var(--touch-target-min, 40px);
+    padding: var(--mobile-panel-padding, 14px);
+  }
+
+  .board-refresh-btn {
+    min-height: var(--touch-target-min, 40px);
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   P3 (Swiss + Sage) — Phase 3 restyle for Board surface.
+   Visual overrides only; markup + drag/drop logic untouched.
+   ────────────────────────────────────────────────────────────────────── */
+
+.board-page {
+  background: var(--paper);
+}
+/* Pull the board page-header tight against the top of `.app-main`.
+   The default `var(--page-padding)` (32px) on `.app-main` created a
+   dead band above the "Board" title and visually disconnected the title
+   row from the kanban columns. Negative margin-top claws that 32px
+   back; margin-left/-right do the same horizontally so the header +
+   columns + bottom edge of the page-header underline all reach the
+   `.app-main` viewport edges. */
+.board-layout {
+  padding: 0;
+  gap: 0;
+  margin: calc(-1 * var(--page-padding, 32px));
+  margin-bottom: 0;
+}
+.board-layout .page-header {
+  border-bottom: 1px solid var(--line);
+  /* Align with first column's `.board-column-header` left padding
+     (14px) so "Board" title and "Queued" column header share the
+     same x-axis — was 24px which left a visible 10px stagger. */
+  padding-top: 14px;
+  padding-right: 24px;
+  padding-bottom: 12px;
+  padding-left: 14px;
+  background: var(--paper);
+}
+.board-layout .page-header__title {
+  font-family: var(--font-geist);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.board-layout .page-header__desc {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+.board-refresh-btn {
+  background: var(--paper-2);
+  border: 1px solid var(--line-soft);
+  color: var(--ink);
+  border-radius: var(--radius);
+  font-family: var(--font-geist);
+  font-size: 12px;
+  font-weight: 600;
+  height: 30px;
+  padding: 0 12px;
+  box-shadow: none;
+}
+.board-refresh-btn:hover:not(:disabled) {
+  background: var(--paper-3);
+}
+
+.board-inline-error {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--red);
+  padding: 8px 24px;
+}
+
+.board-columns {
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  background: var(--paper);
+}
+.board-column {
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--paper);
+  padding: 0;
+  min-height: 0;
+}
+.board-column:last-child { border-right: none; }
+.board-column-header {
+  /* P3 restyle: the header used to be a non-interactive
+     <header>; now it's a <button> that toggles collapse. Reset
+     button chrome so it still reads as the panel header.
+     Title is centered; chevron stays left-pinned + count badge
+     right-pinned via grid 3-zone layout so the h2 lands in the visual
+     center regardless of label length. */
+  width: 100%;
+  background: var(--paper-2);
+  border: none;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 14px 11px;
+  margin-bottom: 0;
+  display: grid;
+  /* 4-zone grid: status dot (::before) · chevron · centered title · count badge.
+     `1fr` on the title column makes it expand; text-align: center
+     pushes "Queued" / "Attention" / etc. to the visual center of
+     the header regardless of label length. */
+  grid-template-columns: 7px 14px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  text-align: center;
+  font: inherit;
+  color: inherit;
+}
+.board-column-header h2 {
+  justify-self: center;
+}
+.board-column-header:hover {
+  background: var(--paper-3);
+}
+.board-column-header:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: -2px;
+}
+.board-column-header__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  font-size: 10px;
+  color: var(--ink-3);
+  flex: 0 0 auto;
+  transition: transform 120ms ease;
+}
+/* Collapsed: hide the card list. The chevron in JSX already
+   swaps glyph (▾ → ▸) but we also pad the header less so the
+   collapsed column reads as a compact row. */
+.board-column--collapsed > .board-column-list {
+  display: none;
+}
+.board-column-header h2 {
+  font-family: var(--font-geist);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.board-column-count {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  min-width: 0;
+  height: auto;
+  padding: 1px 6px;
+}
+
+/* Column dot — restored visually via a ::before glyph so the markup
+   doesn't need a new span. */
+.board-column-header::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  flex: 0 0 auto;
+}
+.board-column[data-column="queued"] .board-column-header::before { background: var(--blue); }
+.board-column[data-column="in_progress"] .board-column-header::before { background: var(--sage); }
+.board-column[data-column="attention"] .board-column-header::before { background: var(--ochre); }
+.board-column[data-column="completed"] .board-column-header::before { background: var(--ink-3); }
+
+.board-column-list {
+  padding: 10px;
+  gap: 8px;
+}
+.board-column-empty {
+  border: 1px dashed var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 12px;
+}
+
+.task-card {
+  background: var(--paper-2);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--paper-3);
+  border-radius: var(--radius);
+  padding: 10px 11px;
+  box-shadow: none;
+  gap: 7px;
+}
+.task-card:hover {
+  background: var(--paper-3);
+}
+.task-card--run { border-left-color: var(--sage); background: rgba(220, 227, 204, 0.4); }
+.task-card--review { border-left-color: var(--ochre); }
+.task-card--fail { border-left-color: var(--red); }
+.task-card--done { border-left-color: var(--paper-3); }
+
+.task-card-title {
+  font-family: var(--font-geist);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.task-card-meta-row {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  gap: 8px;
+}
+.task-card .task-id {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.task-source {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-radius: 2px;
+  border: none;
+  min-width: 0;
+  height: auto;
+  padding: 1px 5px;
+}
+.task-source--web { background: var(--sage-soft); color: var(--sage-deep); }
+.task-source--feishu { background: var(--blue-soft); color: var(--blue); }
+.task-source--cli { background: var(--paper-3); color: var(--ink); }
+
+.task-card-event {
+  margin: 0;
+  margin-top: 0;
+  padding-top: 7px;
+  border-top: 1px solid var(--line-softer);
+  display: block;
+  white-space: normal;
+  overflow: visible;
+}
+.task-card-event__lbl {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 2px;
+}
+.task-card-event__text {
+  font-family: var(--font-geist);
+  font-size: 11.5px;
+  color: var(--ink-2);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.task-card-footer {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  gap: 7px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.task-card-role {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: var(--paper-3);
+  color: var(--ink-2);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+.task-card-role > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.task-card-footer-spacer { flex: 1; }
+.task-time {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+}
+
+@media (min-width: 881px) and (max-width: 1200px) {
+  .board-columns {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+  }
+}
+
+/* Real card state lives on the left-border tone; the StatusBadge is
+   kept in the DOM for assistive tech but visually hidden. */
+.task-card-state-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Mobile override (must come last — the P3 restyle above
+   re-declares .board-columns as a 4-up grid without a media query,
+   which would otherwise win the cascade against the @media (max-
+   width: 880px) rule earlier in the file).
+
+   Preserve the kanban metaphor on phones via horizontal scroll with
+   scroll-snap, one column visible at a time. Previous stack-vertically
+   rule was good for "see everything from a single page scroll" but
+   lost the kanban affordance and made an empty Queued column eat ~80px
+   before the user could reach Done.
+   ────────────────────────────────────────────────────────────── */
+@media (max-width: 880px) {
+  .board-layout {
+    padding: 12px 0;
+    gap: 12px;
+  }
+
+  /* Vertical stack on phones — restores "see everything from a
+     single page scroll" affordance. Empty columns collapse to a
+     compact header row so they don't eat 80px each; tap to expand.
+     Trade-off against the prior horizontal-snap kanban: the swipe
+     gesture was undiscoverable (~13px of column 2 peeking on a
+     375px viewport) and several users reported "only seeing Queued". */
+  .board-columns {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    gap: 8px;
+    border-top: none;
+    background: transparent;
+    overflow: visible;
+    max-width: 100%;
+  }
+
+  .board-column {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid var(--line-soft);
+    border-right: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    background: var(--paper);
+  }
+
+  /* Empty + non-collapsed columns: hide the empty list region so
+     the header doesn't carry a 60px void underneath it. */
+  .board-column:not(.board-column--collapsed) > .board-column-list:empty {
+    display: none;
+  }
+
+  .board-column-header {
+    border-bottom: 1px solid var(--line-softer);
+  }
+
+  /* Collapse the page-header subtitle to a single line on phones
+     so it doesn't wrap into 3 lines on narrow screens. */
+  .board-layout .page-header {
+    padding: 12px 0 0;
+    flex-wrap: wrap;
+  }
+  .board-layout .page-header__desc {
+    /* Allow the summary string ("17 tasks · 3 running · ...") to
+       wrap to 2 lines on very narrow screens with a smaller mono
+       size; nowrap-ellipsis hid too much info. */
+    white-space: normal;
+    font-size: 10.5px;
+    line-height: 1.45;
+  }
+}
+
+/* Stale rule from the prior horizontal-kanban iteration. Vertical
+   stack at ≤880 already drives columns to width:100%, so no narrow-
+   phone override is needed. Block kept empty for clarity / diff
+   readability — safe to delete once the horizontal layout is
+   permanently retired. */
+@media (max-width: 540px) {
+  /* intentionally empty */
+}
+
+/* ─── Attention column dismissal UX ──────────────────────────────
+   Per-card dismiss button + 5s Undo toast. Failed/blocked tasks
+   accumulate in Attention; the per-card affordance lets the user
+   acknowledge them out without rewriting task state. (The earlier
+   column-level "Clear all" button was removed — bulk-clear is
+   rarely needed and the chip looked stapled
+   onto the column header.) */
+.task-card-shell {
+  position: relative;
+}
+.task-card-dismiss {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ink-3);
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms, color 120ms, border-color 120ms;
+}
+.task-card-shell:hover .task-card-dismiss,
+.task-card-dismiss:focus {
+  opacity: 1;
+}
+.task-card-dismiss:hover {
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.board-undo-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px 8px 16px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  z-index: 80;
+}
+.board-undo-toast__label {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.board-undo-toast__btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.board-undo-toast__btn:hover {
+  background: color-mix(in srgb, var(--paper) 12%, transparent);
+}

@@ -1,0 +1,63 @@
+{
+  "name": "magister",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "bun@1.3.12",
+  "engines": {
+    "bun": ">=1.3.12",
+    "node": ">=20.11.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "trustedDependencies": [
+    "better-sqlite3"
+  ],
+  "scripts": {
+    "dev": "bun --watch ./apps/api/src/server.ts",
+    "dev:node": "node --import tsx --watch ./apps/api/src/server.ts",
+    "start:node": "node --import tsx ./apps/api/src/server.ts",
+    "smoke:node:db": "tsx ./scripts/node-db-smoke.ts",
+    "smoke:node:boot": "bash ./scripts/node-api-boot-check.sh",
+    "dev:web": "bun run --cwd ./apps/web dev",
+    "dev:all": "concurrently -k -n api,web -c blue,green \"bun run dev\" \"wait-on -t 60000 tcp:127.0.0.1:3700 && bun run dev:web\"",
+    "build:web": "bun run --cwd ./apps/web build",
+    "preview:web": "bun run --cwd ./apps/web preview",
+    "test:web:e2e": "npm --prefix apps/web run test:e2e",
+    "migrate": "bun ./packages/db/src/migrate.ts",
+    "test": "bun test --max-concurrency=1 ./apps/api ./apps/web/src ./apps/web/serve-prod-handler.test.ts ./packages/core ./packages/db",
+    "typecheck": "bunx tsc --noEmit -p tsconfig.json",
+    "test:stability:backend": "bunx tsc --noEmit -p tsconfig.json && bun test apps/api/test/services/create-task-service.test.ts apps/api/test/services/manager-decision-schema.test.ts apps/api/test/services/manager-automation-service.test.ts apps/api/test/services/runtime-recovery-service.test.ts apps/api/test/routes/run-dispatch.test.ts apps/api/test/routes/run-controls.test.ts apps/api/test/routes/run-context.test.ts apps/api/test/routes/task-graph.test.ts apps/api/test/routes/task-orchestration-history.test.ts apps/api/test/routes/tasks.test.ts"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/d3-hierarchy": "^3.1.7",
+    "@types/d3-zoom": "^3.0.8",
+    "@types/jsdom": "^28.0.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^6.0.1",
+    "bun-types": "^1.3.12",
+    "concurrently": "^10.0.3",
+    "jsdom": "^29.0.2",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.8",
+    "wait-on": "^9.0.10"
+  },
+  "dependencies": {
+    "@fastify/websocket": "^11.2.0",
+    "@modelcontextprotocol/sdk": "^1.25",
+    "@types/proper-lockfile": "^4.1.4",
+    "d3-hierarchy": "^3.1.2",
+    "d3-zoom": "^3.0.0",
+    "proper-lockfile": "^4.1.2",
+    "react-router-dom": "^7.14.1",
+    "ws": "^8.20.0",
+    "zustand": "^5.0.12"
+  }
+}

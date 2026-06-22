@@ -1,0 +1,853 @@
+.app-shell {
+  display: flex;
+  /* `height` (not `min-height`): clamp the shell to exactly the viewport
+     so flex stretching can't make the sidebar drag along when a child
+     route (e.g. chat with a long conversation) grows tall. The shell is
+     the app's height anchor; `.app-main` scrolls internally for routes
+     that need it (and `.app-main:has(> .chat-page)` over in chat.css
+     promotes the chat surface to flex-column so .chat-messages owns
+     the scroll). dvh tracks iOS Safari's dynamic toolbar/keyboard.
+     Browser baseline: this layout assumes `:has()` (Safari 15.4+,
+     Chrome 105+, Firefox 121+) — the project's deployment target. */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--paper);
+  border-right: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 14px 14px;
+  min-height: 0;
+  overflow-y: auto;
+  gap: 18px;
+  font-family: var(--font-geist);
+  color: var(--ink);
+  font-feature-settings: var(--font-feature-settings);
+}
+
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sidebar__close {
+  display: none;
+}
+
+.sidebar__logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  object-fit: contain;
+  display: block;
+}
+
+.sidebar__brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+}
+
+.sidebar__subtitle {
+  margin: 0;
+  font-size: 10px;
+  color: var(--ink-3);
+  line-height: 1.3;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sidebar__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar__section-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  padding: 0 10px;
+}
+
+.sidebar__section-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: var(--radius, 4px);
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+/* Leading glyph (◧ / ▦ / ⌬ / ⚙). Keeps a fixed width so the labels
+ * left-align regardless of which unicode character is used — some
+ * geometry glyphs are slightly narrower than others. */
+.sidebar__item-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+
+.sidebar__item--active .sidebar__item-glyph {
+  color: var(--paper);
+}
+
+.sidebar__item-label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Right-side count badge (e.g. "Sessions 3"). Default tone = neutral
+ * paper-3 chip; live tone = sage fill for runtime/heartbeat counts. */
+.sidebar__item-badge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--paper-3);
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.sidebar__item--active .sidebar__item-badge {
+  background: var(--paper-2);
+  color: var(--ink);
+}
+
+.sidebar__item-badge--live {
+  background: var(--sage);
+  color: var(--paper);
+}
+
+.sidebar__item:hover {
+  background: var(--paper-2);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.sidebar__item:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.sidebar__item--active {
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+}
+
+.sidebar__item--active:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.sidebar__health {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius, 4px);
+  background: var(--paper-2);
+}
+
+.sidebar__health-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sage);
+  box-shadow: 0 0 0 3px var(--sage-soft);
+  flex-shrink: 0;
+}
+
+.sidebar__health[data-tone="warn"] .sidebar__health-dot {
+  background: var(--ochre);
+  box-shadow: 0 0 0 3px var(--ochre-soft);
+}
+
+.sidebar__health[data-tone="down"] .sidebar__health-dot {
+  background: var(--red);
+  box-shadow: 0 0 0 3px var(--red-soft);
+}
+
+.sidebar__health[data-tone="unknown"] .sidebar__health-dot {
+  background: var(--ink-4);
+  box-shadow: 0 0 0 3px var(--line-softer);
+}
+
+.sidebar__health-label {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.003em;
+}
+
+.sidebar__health-time {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+
+/* ── Collapse toggle ── */
+.sidebar__collapse-toggle {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius, 4px);
+  padding: 4px 0;
+  cursor: pointer;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1;
+  text-align: center;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.sidebar__collapse-toggle:hover {
+  background: var(--paper-2);
+  color: var(--ink);
+}
+
+/* ── Collapsed sidebar ── */
+.sidebar[data-collapsed="true"] {
+  --sidebar-width: 56px;
+  width: 56px;
+  min-width: 56px;
+  padding: 18px 8px 14px;
+  align-items: center;
+  overflow: visible;
+}
+.sidebar[data-collapsed="true"] .sidebar__brand-text,
+.sidebar[data-collapsed="true"] .sidebar__section-title,
+.sidebar[data-collapsed="true"] .sidebar__item-label,
+.sidebar[data-collapsed="true"] .sidebar__item-badge,
+.sidebar[data-collapsed="true"] .sidebar__health-label,
+.sidebar[data-collapsed="true"] .sidebar__health-time,
+.sidebar[data-collapsed="true"] .workspace-picker {
+  display: none;
+}
+.sidebar[data-collapsed="true"] .sidebar__header {
+  justify-content: center;
+  padding: 0;
+}
+.sidebar[data-collapsed="true"] .sidebar__brand {
+  justify-content: center;
+}
+.sidebar[data-collapsed="true"] .sidebar__item {
+  justify-content: center;
+  padding: 8px;
+}
+.sidebar[data-collapsed="true"] .sidebar__item-glyph {
+  width: auto;
+  font-size: 16px;
+}
+.sidebar[data-collapsed="true"] .sidebar__health {
+  justify-content: center;
+  padding: 8px;
+  border: none;
+  background: transparent;
+}
+.sidebar[data-collapsed="true"] .sidebar__collapse-toggle {
+  width: 100%;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  background: var(--paper);
+  padding: var(--page-padding);
+  overflow-y: auto;
+  position: relative;
+}
+
+@media (max-width: 960px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .sidebar__collapse-toggle {
+    display: none;
+  }
+
+  .sidebar[data-collapsed="true"] {
+    width: 100%;
+    min-width: 100%;
+    padding: 18px 14px 14px;
+    align-items: stretch;
+  }
+  .sidebar[data-collapsed="true"] .sidebar__brand-text,
+  .sidebar[data-collapsed="true"] .sidebar__section-title,
+  .sidebar[data-collapsed="true"] .sidebar__item-label,
+  .sidebar[data-collapsed="true"] .sidebar__item-badge,
+  .sidebar[data-collapsed="true"] .sidebar__health-label,
+  .sidebar[data-collapsed="true"] .sidebar__health-time,
+  .sidebar[data-collapsed="true"] .workspace-picker {
+    display: revert;
+  }
+  .sidebar[data-collapsed="true"] .sidebar__item {
+    justify-content: flex-start;
+    padding: 7px 10px;
+  }
+  .sidebar[data-collapsed="true"] .sidebar__item-glyph {
+    width: 16px;
+    font-size: 13px;
+  }
+  .sidebar[data-collapsed="true"] .sidebar__health {
+    padding: 10px 12px;
+    border: 1px solid var(--line-soft);
+    background: var(--paper-2);
+  }
+
+  .app-main {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 880px) {
+  .app-shell {
+    --mobile-sidebar-width: min(84vw, 320px);
+  }
+
+  /* Align .app-main padding to --mobile-page-padding so the mobile bar's
+     `margin: -16px -16px 16px` cancels out cleanly and the bar reaches
+     the viewport edges. Was 20px (inherited from ≤960 rule), which left
+     a 4px floating gap on each side. */
+  .app-main {
+    padding: var(--mobile-page-padding, 16px);
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    width: var(--mobile-sidebar-width);
+    min-width: 0;
+    max-width: 320px;
+    border-right: 1px solid var(--line-soft);
+    border-bottom: none;
+    padding: calc(18px + env(safe-area-inset-top, 0px)) 14px calc(18px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px));
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 24px 0 48px rgba(24, 22, 20, 0.18);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .sidebar[data-mobile-open="true"] {
+    transform: translateX(0);
+  }
+
+  .sidebar__header {
+    padding-right: 0;
+  }
+
+  .sidebar__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--touch-target-comfortable, 44px);
+    height: var(--touch-target-comfortable, 44px);
+    margin-left: auto;
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius, 4px);
+    background: var(--paper);
+    color: var(--ink-3);
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  .sidebar__close:hover {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+
+  .sidebar__nav {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .sidebar__section {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .sidebar__section-items {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar__item {
+    min-height: var(--touch-target-min, 40px);
+    border-radius: var(--radius, 4px);
+    font-size: 14px;
+    white-space: normal;
+  }
+
+  .app-main {
+    padding: var(--mobile-page-padding, 16px);
+  }
+}
+
+/* WorkspacePicker — sidebar-top dropdown selector. Mirrors
+   Linear/Notion/Vercel positioning: clickable header with current
+   label + chevron; click opens a list dropdown anchored below. */
+.workspace-picker {
+  position: relative;
+  margin: 0 8px;
+}
+
+.workspace-picker__trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--paper-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius, 4px);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+}
+
+.workspace-picker__trigger:hover {
+  border-color: var(--line);
+}
+
+.workspace-picker__trigger:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.workspace-picker__icon {
+  font-size: 18px;
+  color: var(--sage-deep);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.workspace-picker__label-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.workspace-picker__label {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-picker__path {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-picker__chevron {
+  flex-shrink: 0;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.workspace-picker__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 4px);
+  box-shadow: 0 8px 24px rgba(24, 22, 20, 0.08);
+  z-index: 50;
+  padding: 6px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.workspace-picker__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.workspace-picker__option:hover {
+  background: var(--surface-muted, #f3f4f6);
+}
+
+.workspace-picker__option--active {
+  background: var(--surface-muted, #f3f4f6);
+}
+
+.workspace-picker__option-check {
+  width: 14px;
+  flex-shrink: 0;
+  color: var(--primary, #2563eb);
+  font-weight: 700;
+  text-align: center;
+}
+
+.workspace-picker__option-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.workspace-picker__option-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.workspace-picker__default-tag,
+.workspace-manager__default-tag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--primary, #2563eb);
+  background: rgba(37, 99, 235, 0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 6px;
+}
+
+.workspace-picker__option-path {
+  font-size: 11px;
+  color: var(--text-muted, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-picker__divider {
+  height: 1px;
+  margin: 6px 0;
+  background: var(--border, #e5e7eb);
+}
+
+.workspace-picker__action {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--primary, #2563eb);
+  font-size: 13px;
+}
+
+.workspace-picker__action:hover {
+  background: var(--surface-muted, #f3f4f6);
+}
+
+.workspace-picker__action--muted {
+  color: var(--text-muted, #6b7280);
+}
+
+/* WorkspaceManagerModal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.modal-content {
+  background: var(--surface, #fff);
+  border-radius: 8px;
+  max-width: 720px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.modal-header button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+  border-radius: var(--radius, 4px);
+}
+
+.modal-error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 8px 20px;
+  font-size: 13px;
+}
+
+.workspace-manager__list {
+  list-style: none;
+  margin: 0;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.workspace-manager__row {
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workspace-manager__row-text {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.workspace-manager__row-text code {
+  background: var(--surface-muted, #f3f4f6);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.workspace-manager__id {
+  color: var(--text-muted, #6b7280);
+  font-size: 11px;
+}
+
+.workspace-manager__row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.workspace-manager__row-actions button {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.workspace-manager__row-actions .danger {
+  color: #c33;
+  border-color: #c33;
+}
+
+.workspace-manager__row-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.workspace-manager__add {
+  display: block;
+  margin: 12px 20px 20px;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px dashed var(--border, #e5e7eb);
+  border-radius: 6px;
+  color: var(--primary, #2563eb);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.workspace-manager__form,
+.workspace-manager__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+}
+
+.workspace-manager__form h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.workspace-manager__form label,
+.workspace-manager__edit label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+
+.workspace-manager__form input,
+.workspace-manager__edit input {
+  padding: 6px 10px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.workspace-manager__form-actions,
+.workspace-manager__edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.workspace-manager__form-actions button,
+.workspace-manager__edit-actions button {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.workspace-manager__form-actions .primary,
+.workspace-manager__edit-actions .primary {
+  background: var(--primary, #2563eb);
+  color: #fff;
+  border-color: var(--primary, #2563eb);
+}
+
+/* Inline-confirm state for the Delete button (replaces the previous
+   window.confirm). The whole row gets a subtle red border + warmer
+   background so the user knows the next click is destructive — and
+   the prompt text + Confirm/Cancel buttons sit where the regular
+   actions usually live, so the visual displacement is minimal. */
+.workspace-manager__row--confirming {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.04);
+}
+
+.workspace-manager__confirm-prompt {
+  font-size: 12px;
+  color: #991b1b;
+  margin-right: 8px;
+  align-self: center;
+}
+
+@media (max-width: 880px) {
+  .workspace-manager__list,
+  .workspace-manager__form,
+  .workspace-manager__edit {
+    padding-inline: 0;
+  }
+
+  .workspace-manager__add {
+    margin-inline: 0;
+  }
+
+  .workspace-manager__row-actions button,
+  .workspace-manager__add,
+  .workspace-manager__form-actions button,
+  .workspace-manager__edit-actions button {
+    min-height: var(--touch-target-min, 40px);
+    padding-inline: 14px;
+  }
+}

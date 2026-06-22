@@ -1,0 +1,73 @@
+{
+  "executors": {},
+  "roleRouting": {
+    "leader": { "adapterId": "default-binding", "strategy": "model_only" },
+    "architect": { "adapterId": "default-binding", "strategy": "model_only" },
+    "coder": { "adapterId": "default-binding", "strategy": "model_only" },
+    "reviewer": { "adapterId": "default-binding", "strategy": "model_only" },
+    "evaluator": { "adapterId": "default-binding", "strategy": "model_only" },
+    "lander": { "adapterId": "default-binding", "strategy": "model_only" }
+  },
+  "roleMapping": {
+    "coder": "coder",
+    "reviewer": "reviewer",
+    "architect": "architect",
+    "lander": "lander"
+  },
+  "providers": {
+    "anthropic": {
+      "transport": "api",
+      "apiDialect": "anthropic_messages",
+      "label": "Anthropic",
+      "vendor": "anthropic",
+      "baseUrl": "https://api.anthropic.com",
+      "auth": {
+        "kind": "api_key",
+        "secretRef": "ANTHROPIC_API_KEY",
+        "headerName": "x-api-key"
+      }
+    },
+    "openai-compatible": {
+      "transport": "api",
+      "apiDialect": "openai_chat_completions",
+      "label": "OpenAI-compatible (OpenAI / DeepSeek / Moonshot / DashScope / etc.)",
+      "vendor": "openai",
+      "baseUrl": "https://api.openai.com/v1",
+      "auth": {
+        "kind": "api_key",
+        "secretRef": "OPENAI_API_KEY",
+        "headerName": "Authorization",
+        "prefix": "Bearer "
+      }
+    }
+  },
+  "models": {
+    "default-model": {
+      "modelName": "claude-sonnet-4-6",
+      "label": "Default leader model (Anthropic Claude Sonnet)",
+      "vendor": "anthropic",
+      "contextWindow": 200000,
+      "maxOutputTokens": 64000,
+      "providerRefs": { "api": "anthropic" },
+      "defaultReasoning": { "mode": "auto", "effort": "medium", "visibility": "summary" },
+      "capabilityHints": { "vision": true }
+    },
+    "openai-compatible-model": {
+      "modelName": "gpt-4o",
+      "label": "Example OpenAI-compatible model — set modelName to your provider's model id",
+      "vendor": "openai",
+      "contextWindow": 128000,
+      "maxOutputTokens": 16384,
+      "providerRefs": { "api": "openai-compatible" },
+      "defaultReasoning": { "mode": "auto", "effort": "medium" }
+    }
+  },
+  "bindings": {
+    "default-binding": {
+      "executionMode": "api",
+      "modelRef": "default-model",
+      "providerRef": "anthropic",
+      "timeoutMs": 7200000
+    }
+  }
+}

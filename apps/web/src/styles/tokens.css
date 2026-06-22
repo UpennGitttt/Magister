@@ -1,0 +1,115 @@
+/*
+ * Magister design tokens — P3 (Swiss + Sage) foundation.
+ *
+ * Two layers live here:
+ *
+ *   1. P3 tokens (§4 of docs/specs/2026-05-16-ui-redesign-p3-spec.md).
+ *      These are the source of truth for the redesign rollout. New
+ *      page styles in Phase 1+ should reference --paper, --ink, --sage,
+ *      etc. directly.
+ *
+ *   2. Legacy bridge tokens (--bg, --surface, --primary, …) that map
+ *      onto variables.css. Existing styles still resolve through these
+ *      until Phase 1+ migrates them onto the P3 palette. Do NOT remove
+ *      these — base.css / layout.css / sidebar.css / etc. all read them.
+ */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────
+   * P3 — Paper / ink
+   * ───────────────────────────────────────────────────────────────── */
+  --paper:        #ECE7D6;  /* page background, warm cream */
+  --paper-2:      #E2DDC9;  /* secondary surface (meta-bar, sidebar foot) */
+  --paper-3:      #D2CCB6;  /* tertiary surface, table head */
+  --ink:          #181614;  /* primary text, warm near-black */
+  --ink-2:        #2E2A26;  /* secondary text */
+  --ink-3:        #6B6862;  /* tertiary / labels */
+  --ink-4:        #94908A;  /* hint text — labels only, never body */
+
+  /* P3 — Lines */
+  --line:         #181614;
+  --line-soft:    rgba(24, 22, 20, 0.12);
+  --line-softer:  rgba(24, 22, 20, 0.06);
+
+  /* P3 — Accents */
+  --sage:         #6B7F4A;  /* live / running / positive */
+  --sage-deep:    #3F4E26;  /* sage text on cream */
+  --sage-soft:    #DCE3CC;  /* sage chip background */
+
+  --ochre:        #B47E2E;  /* warning / blocked / parked */
+  --ochre-soft:   #F2E6CC;
+
+  --red:          #B5402E;  /* failed / destructive */
+  --red-soft:     #F0D9D2;
+
+  --blue:         #3A6A8E;  /* queued / informational */
+  --blue-soft:    #D6E0EA;
+
+  /* P3 — Typography */
+  --font-geist:   'Geist', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono:    'Geist Mono', ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+  --font-feature-settings: "ss01", "cv01";
+
+  /* P3 — Spacing / radius (single hard-radius per §4.3) */
+  --radius: 4px;
+
+  /* ─────────────────────────────────────────────────────────────────
+   * Legacy token bridge — TODO remove once all CSS files migrate
+   *
+   * Lifted globally from the previously-scoped `.settings-page` block
+   * during Phase 5 polish. Now that every page has been migrated onto
+   * P3 the legacy aliases all resolve to P3 values; any remaining
+   * inline references to --muted / --border / --primary / etc. inside
+   * sub-tab components keep rendering correctly without per-page
+   * overrides.
+   * ───────────────────────────────────────────────────────────────── */
+  --bg: var(--paper);
+  --surface: var(--paper-2);
+  --surface-soft: var(--paper-3);
+  --border: var(--line-soft);
+
+  --text: var(--ink);
+  --muted: var(--ink-3);
+  --subtle: var(--ink-4);
+
+  --primary: var(--sage-deep);
+  --primary-soft: var(--sage-soft);
+  --primary-hover: var(--sage);
+
+  --success: var(--sage);
+  --success-soft: var(--sage-soft);
+
+  --warning: var(--ochre);
+  --warning-soft: var(--ochre-soft);
+
+  --danger: var(--red);
+  --danger-soft: var(--red-soft);
+  --error: var(--red);
+
+  /* Legacy radius scale — Phase 1+ collapses these onto --radius. */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+
+  --shadow-sm: var(--shadow-card, 0 1px 2px #1018280a, 0 8px 24px -12px #10182814);
+  --shadow-md: var(--shadow-card, 0 1px 2px #1018280a, 0 8px 24px -12px #10182814);
+
+  --sidebar-width: 232px;
+  --page-padding: 32px;
+  --breakpoint-mobile: 880px;
+  --touch-target-min: 40px;
+  --touch-target-comfortable: 44px;
+  --mobile-page-padding: 16px;
+  --mobile-panel-padding: 14px;
+
+  --font-sans: var(
+    --font-family-sans,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
+    "Inter",
+    "Helvetica Neue",
+    sans-serif
+  );
+}

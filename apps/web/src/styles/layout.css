@@ -1,0 +1,162 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.page-header__title {
+  /* Bumped from 24px → 32px (2026-05-19) — title felt undersized
+     against the wide page area and the global-actions cluster
+     dominated the top-right. Anchor with weight 700 so it reads as
+     the page's primary identifier. */
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.page-header__desc {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.page-header__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.app-mobile-bar {
+  display: none;
+}
+
+.app-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 880px) {
+  .app-mobile-bar {
+    /* Was `position: sticky; top: 0` — that pinned the "Control
+       Center / Board / Sessions" title to viewport top during
+       scroll, which felt like a floating banner overlapping
+       content. Switched to relative + in-flow so the bar scrolls
+       away naturally; the hamburger comes back when you scroll
+       up to the top (iOS Mail / Twitter pattern). */
+    position: relative;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    margin: calc(var(--mobile-page-padding, 16px) * -1) calc(var(--mobile-page-padding, 16px) * -1) 16px;
+    padding: calc(6px + env(safe-area-inset-top, 0px)) calc(var(--mobile-page-padding, 16px) + env(safe-area-inset-right, 0px)) 6px calc(var(--mobile-page-padding, 16px) + env(safe-area-inset-left, 0px));
+    padding-right: calc(var(--mobile-page-padding, 16px) + env(safe-area-inset-right, 0px) + 96px);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  /* Keep the global .app-mobile-bar visible on chat pages so users can
+     reach Dashboard / Board / Settings via its hamburger. The chat-
+     specific .chat-page__mobile-bar lives below it for session-scoped
+     actions (☰ sessions, ⓘ context). Two compact bars > one functional
+     bar; users reported being unable to navigate out of chat on mobile
+     after the previous "hide global to reclaim 56px" optimization. */
+
+  /* On chat: kill the bottom margin so the global bar and the
+     chat-specific bar sit flush against each other — they're paired
+     navigation chrome, the 16px gap between them is visual noise.
+     Other pages keep the default 16px margin for content breathing
+     room. */
+  .app-main:has(> .chat-page) > .app-mobile-bar {
+    margin-bottom: 0;
+  }
+
+  .app-mobile-bar__menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 var(--touch-target-comfortable, 44px);
+    width: var(--touch-target-comfortable, 44px);
+    height: var(--touch-target-comfortable, 44px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .app-mobile-bar__title {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-sidebar-backdrop {
+    position: fixed;
+    inset: 0 0 0 var(--mobile-sidebar-width, min(84vw, 320px));
+    z-index: 35;
+    display: block;
+    background: rgba(15, 23, 42, 0.42);
+  }
+
+  .page-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 0;
+  }
+
+  /* Hide the in-page PageHeader title on mobile — the global
+     .app-mobile-bar already shows the same string (e.g. "Board",
+     "Control Center", "Settings"). Description + actions stay
+     visible since they carry per-page context the mobile bar
+     can't. Same treatment applied to the Settings page's own
+     header below (different class). */
+  .page-header__title {
+    display: none;
+  }
+
+  .page-header__desc {
+    font-size: 13px;
+  }
+
+  .page-header__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.status-badge--success { background: var(--sage-soft); color: var(--sage-deep); }
+.status-badge--success .status-badge__dot { background: var(--sage-deep); }
+.status-badge--warning { background: var(--ochre-soft); color: var(--ochre); }
+.status-badge--warning .status-badge__dot { background: var(--ochre); }
+.status-badge--danger { background: var(--red-soft); color: var(--red); }
+.status-badge--danger .status-badge__dot { background: var(--red); }
+.status-badge--primary { background: var(--blue-soft); color: var(--blue); }
+.status-badge--primary .status-badge__dot { background: var(--blue); }
+.status-badge--neutral { background: var(--paper-3); color: var(--ink-2); }
+.status-badge--neutral .status-badge__dot { background: var(--ink-2); }
+
+/* .app-global-actions removed. ApprovalBell moved into
+   ChatPage's sidebar header (panel-head-actions); NewTaskButton
+   deleted (redundant with ChatInput + sidebar "+ New"). The
+   absolute-positioned floating cluster was overlapping banners
+   (compaction, warnings, review blocks) on the chat page. */

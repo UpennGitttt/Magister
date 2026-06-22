@@ -1,0 +1,39 @@
+/*
+ * Skeleton — placeholder grey blocks for loading state.
+ *
+ * Phase 1: no shimmer animation. Just static grey blocks that respect
+ * prefers-reduced-motion. Spec: docs/specs/2026-05-16-ui-redesign-p3-spec.md §6.4.
+ */
+
+.magister-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.magister-skeleton__line {
+  height: 12px;
+  background: var(--paper-3);
+  border-radius: var(--radius, 4px);
+  opacity: 0.85;
+}
+
+.magister-skeleton__line:nth-child(odd) {
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .magister-skeleton__line {
+    animation: magister-skeleton-pulse 1.6s ease-in-out infinite;
+  }
+  .magister-skeleton__line:nth-child(2) { animation-delay: 0.15s; }
+  .magister-skeleton__line:nth-child(3) { animation-delay: 0.3s; }
+  .magister-skeleton__line:nth-child(4) { animation-delay: 0.45s; }
+  .magister-skeleton__line:nth-child(5) { animation-delay: 0.6s; }
+}
+
+@keyframes magister-skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.9; }
+}

@@ -1,0 +1,163 @@
+/* Spec §5.10 — Full Trace modal. */
+
+.trace-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.trace-modal {
+  background: var(--surface, #fff);
+  color: var(--text, #1a1a1a);
+  width: min(680px, 92vw);
+  max-height: 86vh;
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border, #d0d0d0);
+  padding: 16px 20px 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+}
+
+.trace-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border, #d0d0d0);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.trace-modal-header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.trace-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted, #666);
+  padding: 0;
+  border-radius: 4px;
+}
+
+.trace-modal-close:hover {
+  color: var(--text, #1a1a1a);
+}
+
+.trace-modal-id {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+
+.trace-modal-id code {
+  flex: 1;
+  background: var(--surface-muted, #f4f4f4);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, monospace);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.trace-modal-copy {
+  border: 1px solid var(--border, #d0d0d0);
+  background: var(--surface, #fff);
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--muted, #666);
+}
+
+.trace-modal-copy:hover {
+  background: var(--surface-muted, #f4f4f4);
+  color: var(--text, #1a1a1a);
+}
+
+.trace-modal-loading,
+.trace-modal-error {
+  font-size: 12px;
+  color: var(--muted, #666);
+  padding: 12px 0;
+}
+
+.trace-modal-error {
+  color: var(--text-danger, #c0392b);
+}
+
+.trace-modal-section {
+  margin-bottom: 14px;
+}
+
+.trace-modal-section h3 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--muted, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.trace-modal-dl {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 16px;
+  margin: 0;
+}
+
+.trace-modal-dl > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.trace-modal-dl dt {
+  color: var(--muted, #666);
+}
+
+.trace-modal-dl dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.trace-modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.trace-modal-table th,
+.trace-modal-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border, #d0d0d0);
+}
+
+.trace-modal-table th {
+  font-weight: 600;
+  color: var(--muted, #666);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.trace-modal-row-root td {
+  font-weight: 600;
+}

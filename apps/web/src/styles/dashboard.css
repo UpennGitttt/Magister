@@ -1,0 +1,1114 @@
+/*
+ * Dashboard — P3 (Swiss + Sage) restyle.
+ *
+ * Spec: docs/specs/2026-05-16-ui-redesign-p3-spec.md §5.2.
+ * All hex literals have been replaced with P3 tokens defined in
+ * `apps/web/src/styles/tokens.css`. Panel container itself is rendered
+ * by `components/ui/Panel.tsx`; this file styles the panel internals
+ * (status strip, work queue table rows, attention sections, agent
+ * pool grid).
+ */
+
+.dashboard-page {
+  min-height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-geist);
+  font-feature-settings: var(--font-feature-settings);
+}
+
+.dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  /* Pull the dashboard header tight against `.app-main`'s top edge,
+     same pattern as the Board fix. The default `--page-padding` (32px)
+     on `.app-main` left a dead band above the "Control Center" title.
+     Negative margin-top claws it back so the title sits in the same
+     y-band as the floating ApprovalBell + NewTask cluster. */
+  margin-top: calc(-1 * var(--page-padding, 32px));
+}
+
+/* Page-header subtitle is mockup-styled as a small mono "workspace
+ * overview" string that sits inline next to the title via an em-dash.
+ * The PageHeader component renders the title h1 + description p
+ * side-by-side, but the global stylesheet defaults to stacking them.
+ * Override locally so the dashboard variant matches the mockup. */
+.dashboard-page .page-header {
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.dashboard-page .page-header > div:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dashboard-page .page-header__title {
+  font-family: var(--font-geist);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.dashboard-page .page-header__desc {
+  margin-top: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+.dashboard-page .page-header__desc::before {
+  content: "— ";
+  margin-right: 2px;
+}
+
+/* Keyboard-shortcut chips on the right side of the page header
+ * (⌘ K · command, ⌘ ⏎ · dispatch). Wired in AppShell to focus the
+ * session search / composer respectively. Hidden on touch-only
+ * devices where the hints would be unreachable.
+ *
+ * `hover: none + pointer: coarse` covers phones + most tablets while
+ * staying visible on laptops with touchscreens (which retain a fine
+ * pointer + hover capability). Matches the JS isTouchOnlyDevice()
+ * check in lib/platform.ts so the listener and the chip render are
+ * consistent. */
+.dashboard-header-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .dashboard-header-chips {
+    display: none;
+  }
+}
+
+.dashboard-header-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--paper-2);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.dashboard-header-chip__keys {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.dashboard-header-chip__sep {
+  color: var(--ink-3);
+  margin: 0 2px;
+}
+
+.dashboard-header-chip__label {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+/* ─── Status strip ─────────────────────────────────────────────── */
+
+.dashboard-status-strip {
+  /* Adapts to either 5 or 6 cells (CostCell injects its own
+   * .dashboard-status-strip__cell only when the /usage endpoint
+   * resolves). `auto-fit` + minmax(160px, 1fr) keeps the labels
+   * unwrapped on a 1280px viewport and gracefully drops to fewer
+   * columns at narrow widths. */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 4px);
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.dashboard-status-strip__cell {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-right: 1px solid var(--line-soft);
+  min-width: 0;
+  min-height: 108px;
+}
+
+.dashboard-status-strip__cell:last-child {
+  border-right: none;
+}
+
+/* Top row of a cell: LABEL on the left, optional pill on the right
+ * (e.g. "SYSTEM HEALTH  OK", "PENDING APPROVALS  2"). Replaces the
+ * inline-pill-on-label pattern which only worked for cells without a
+ * sub-line. */
+.dashboard-status-strip__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dashboard-status-strip__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Small colored pill that sits inline with the label
+ * (e.g. "SYSTEM HEALTH  OK", "PENDING APPROVALS  2"). Sage = ok,
+ * ochre = warn. Mirrors the mockup's .stat-pill. */
+.dashboard-status-strip__pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 2px;
+  background: var(--sage-soft);
+  color: var(--sage-deep);
+  flex-shrink: 0;
+}
+
+.dashboard-status-strip__pill--warn {
+  background: var(--ochre-soft);
+  color: var(--ochre);
+}
+
+.dashboard-status-strip__pill--red {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.dashboard-status-strip__value {
+  font-family: var(--font-geist);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Variant for text values ("Operational", "Connected").
+ * Keeps the lockup readable inside a narrow cell — at 22px these
+ * strings clip on a 1280px viewport. Numeric cells keep the bigger
+ * eyebrow size. */
+.dashboard-status-strip__value--text {
+  font-size: 22px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* Small trailing word after a numeric value
+ * (e.g. "5 available", "2 tools", "23 sec ago"). */
+.dashboard-status-strip__value-sub {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+.dashboard-status-strip__value[data-tone="ok"] {
+  color: var(--sage-deep);
+}
+
+.dashboard-status-strip__value[data-tone="warn"] {
+  color: var(--ochre);
+}
+
+/* ─── Panel chrome shared by Work Queue / Needs Attention /
+   Agent Pool / status strip wrapper. P3 spec §4.4 — 1px hairline,
+   4px radius, paper background, no drop shadow. */
+.dashboard-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 4px);
+  background: var(--paper);
+  padding: 16px 18px;
+}
+
+/* Status strip uses the same chrome but the cells inside provide
+   their own padding — strip-level padding would double up. */
+.dashboard-card.dashboard-status-strip {
+  padding: 0;
+}
+
+/* Per-section heading row: h2 left, optional actions right. Mirrors
+   the Panel head pattern but for sections that need richer body
+   markup (tables, grids) than Panel's children slot easily allows. */
+.dashboard-panel-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.dashboard-panel-heading h2 {
+  font-family: var(--font-geist);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.dashboard-panel-heading p {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  margin: 2px 0 0;
+}
+
+/* Right side of the panel heading — small mono ink-3 meta string
+ * (e.g. "10 most recent · refreshes 30s", "5 registered · heartbeat 30s",
+ * "7 items · grouped"). Mirrors the mockup's heading right rail. */
+.dashboard-panel-heading__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+/* (Legacy `.dashboard-status-strip__icon` removed — the System cell
+ * now uses the standard top-row + pill layout shared with all other
+ * strip cells.) */
+
+/* ─── Main row: Work Queue + Needs Attention ──────────────────── */
+
+.dashboard-main-row {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+}
+
+.dashboard-inline-error,
+.dashboard-inline-note,
+.work-queue-empty,
+.attention-empty {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.dashboard-inline-error {
+  color: var(--red);
+  margin-bottom: 8px;
+}
+
+.work-queue-table-wrap {
+  overflow-x: auto;
+}
+
+.work-queue-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-geist);
+  table-layout: fixed;
+}
+
+/* Column widths — TASK gets the bulk, the rest are sized for content.
+ * Without explicit widths the fixed table-layout makes all columns
+ * equal-width which gives the metadata columns more room than they
+ * need. Numbers chosen so SOURCE/AGENT/STATE/UPD fit their tightest
+ * legible width with TASK taking the remainder. */
+.work-queue-table col.work-queue-col--task { width: auto; }
+.work-queue-table col.work-queue-col--source { width: 56px; }
+.work-queue-table col.work-queue-col--agent { width: 60px; }
+.work-queue-table col.work-queue-col--state { width: 82px; }
+.work-queue-table col.work-queue-col--upd { width: 56px; }
+
+.work-queue-table th {
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.work-queue-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.work-queue-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.work-queue-table tbody tr:hover td {
+  background: var(--paper-2);
+}
+
+.work-queue-task-link {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 500;
+  letter-spacing: -0.003em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+
+.work-queue-task-link:hover {
+  color: var(--sage-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.work-queue-task-link:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.work-queue-cell-meta {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.01em;
+}
+
+/* Work-queue state cell — glyph + uppercase mono label. The glyph is
+ * a unicode character (● ○ ♦ ▸ ◆) sized to ~10.5px so the row hugs
+ * the table baseline. Toning by tone class so we don't need to
+ * stack a separate dot element. */
+.work-queue-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.work-queue-state__glyph {
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ink-3);
+}
+
+.work-queue-state--running { color: var(--sage-deep); }
+.work-queue-state--running .work-queue-state__glyph { color: var(--sage); }
+
+.work-queue-state--done { color: var(--ink-3); }
+.work-queue-state--done .work-queue-state__glyph { color: var(--ink-3); }
+
+.work-queue-state--failed { color: var(--red); }
+.work-queue-state--failed .work-queue-state__glyph { color: var(--red); }
+
+.work-queue-state--queued { color: var(--blue); }
+.work-queue-state--queued .work-queue-state__glyph { color: var(--blue); }
+
+.work-queue-state--blocked { color: var(--ochre); }
+.work-queue-state--blocked .work-queue-state__glyph { color: var(--ochre); }
+
+.work-queue-empty {
+  padding: 18px 10px;
+  text-align: center;
+}
+
+/* ─── Needs Attention panel ───────────────────────────────────── */
+
+/* Needs-Attention panel — let the section heads and list rows reach
+ * the panel edge (the head uses a paper-2 strip background that needs
+ * to span the panel's full width). Per-section padding is supplied
+ * by .attention-section__head and .attention-item below. */
+.attention-panel .magister-panel__body {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.attention-section {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.attention-section:last-child {
+  border-bottom: none;
+}
+
+.attention-section__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  background: var(--paper-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.attention-section__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--ink-4);
+}
+
+.attention-section[data-tone="ochre"] .attention-section__dot {
+  background: var(--ochre);
+}
+
+.attention-section[data-tone="red"] .attention-section__dot {
+  background: var(--red);
+}
+
+.attention-section[data-tone="blue"] .attention-section__dot {
+  background: var(--blue);
+}
+
+.attention-section h3 {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.attention-section__count {
+  margin-left: auto;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.attention-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.attention-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line-softer);
+}
+
+.attention-item:last-child {
+  border-bottom: none;
+}
+
+/* Empty-state line lives inside the panel body but should match the
+ * row padding so it doesn't sit flush to the head strip. */
+.attention-empty {
+  padding: 10px 16px;
+}
+
+.attention-item-title {
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attention-link {
+  flex-shrink: 0;
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sage-deep);
+  font-weight: 600;
+}
+
+.attention-link:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.attention-link:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* P3 §6.2 — inline approve/reject + secondary context link on
+ * Approval Required rows. Stacks vertically on narrow viewports so
+ * the row stays readable. */
+.attention-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* P3 §6.3 — status-strip sub-line below the big value. Mono 11px
+ * ink-3 (mockup): "API responsive · retention OK",
+ * "bash · mcp__github__delete", "task #093 streaming". By default
+ * truncates to a single line so cell heights stay aligned. The
+ * --wrap modifier allows up to 2 lines for the agents role list. */
+.dashboard-status-strip__sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-status-strip__sub--wrap {
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+/* ─── Agent Pool grid ─────────────────────────────────────────── */
+
+.agent-pool-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.agent-pool-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 78px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 4px);
+  background: var(--paper);
+  padding: 13px 14px;
+}
+
+.agent-pool-card--config,
+.agent-pool-card--error {
+  border-color: color-mix(in srgb, var(--red) 34%, var(--line));
+  background: color-mix(in srgb, var(--red-soft) 36%, var(--paper));
+}
+
+.agent-pool-card--blocked {
+  border-color: color-mix(in srgb, var(--ochre) 40%, var(--line));
+  background: color-mix(in srgb, var(--ochre-soft) 34%, var(--paper));
+}
+
+.agent-pool-card--stale {
+  background: var(--paper-2);
+}
+
+.agent-pool-card--skeleton {
+  min-height: 78px;
+  background: var(--paper-2);
+  border-color: var(--line-soft);
+}
+
+/* Top line — status dot + agent name + lifecycle pill on the right. */
+.agent-pool-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-pool-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--paper-3);
+  flex-shrink: 0;
+}
+
+.agent-pool-dot--live {
+  background: var(--sage);
+  box-shadow: 0 0 0 3px rgba(107, 127, 74, 0.18);
+}
+
+.agent-pool-dot--ready {
+  background: var(--sage);
+}
+
+.agent-pool-dot--stale {
+  background: var(--ink-4);
+}
+
+.agent-pool-dot--blocked {
+  background: var(--ochre);
+}
+
+.agent-pool-dot--error,
+.agent-pool-dot--config {
+  background: var(--red);
+}
+
+.agent-pool-name {
+  font-family: var(--font-geist);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+
+/* Lifecycle pill on the agent card. Activity and configuration are
+ * deliberately separate states: READY/STALE/CONFIG are not all "idle". */
+.agent-pool-tag {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border-radius: 2px;
+  color: var(--ink-3);
+  background: var(--paper-3);
+  text-transform: uppercase;
+}
+
+.agent-pool-tag--live {
+  color: var(--sage-deep);
+  background: var(--sage-soft);
+}
+
+.agent-pool-tag--ready {
+  color: var(--sage-deep);
+  background: var(--sage-soft);
+}
+
+.agent-pool-tag--stale {
+  color: var(--ink-3);
+  background: var(--paper-3);
+}
+
+.agent-pool-tag--blocked {
+  color: var(--ochre);
+  background: var(--ochre-soft);
+}
+
+.agent-pool-tag--error,
+.agent-pool-tag--config {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.agent-pool-model {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.01em;
+  word-break: break-all;
+}
+
+/* Last-heartbeat line below the model, only rendered when we have a
+ * timestamp. Mono with paper-3 contrast, tracks the spec's
+ * "turn N · 23s ago" auxiliary text. */
+.agent-pool-heartbeat {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 1200px) {
+  .dashboard-main-row {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-pool-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-layout {
+    padding: 18px;
+  }
+
+  .agent-pool-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 880px) {
+  .dashboard-layout {
+    padding: var(--mobile-page-padding, 16px);
+  }
+
+  /* Agent pool grid: at ≤880px even 2-col is tight (5-col rule above
+   * shouldn't apply, but the 900px rule still leaves 2-col which is
+   * borderline at 540–880px and unreadable below). Keep 2-col for the
+   * tablet band; the ≤540px rule already collapses to 1-col. */
+  .agent-pool-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-action-btn {
+    min-height: var(--touch-target-min, 40px);
+  }
+
+  .work-queue-task-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-target-min, 40px);
+  }
+
+  .work-queue-table-wrap {
+    max-width: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .work-queue-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--paper);
+  }
+
+  .work-queue-table th:first-child,
+  .work-queue-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--paper);
+  }
+
+  .work-queue-table th:first-child {
+    z-index: 3;
+  }
+}
+
+/* Tablet-ish: 541–880px keeps the strip readable at 2-up (each cell
+ * still has room for the eyebrow lockup) instead of jumping straight
+ * to 1-col which wastes vertical space. */
+@media (max-width: 880px) and (min-width: 541px) {
+  .dashboard-status-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-status-strip__cell {
+    border-right: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .dashboard-status-strip__cell:nth-child(2n) {
+    border-right: none;
+  }
+
+  .dashboard-status-strip__cell:nth-last-child(-n + 2) {
+    border-bottom: none;
+  }
+}
+
+/* Phone: at 540px and below, the auto-fit grid collapses to 1-col by
+ * default; we tighten padding + drop the eyebrow value font size so
+ * 6 stacked cells take ~240–280px total (not ~480px). */
+@media (max-width: 540px) {
+  .dashboard-status-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-status-strip__cell {
+    border-right: none;
+    border-bottom: 1px solid var(--line-soft);
+    padding: 9px 14px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
+  }
+
+  .dashboard-status-strip__cell:last-child {
+    border-bottom: none;
+  }
+
+  /* Label hugs the left, value pushes to the right — single 40px row
+   * instead of a 80px stacked block. */
+  .dashboard-status-strip__label {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .dashboard-status-strip__value {
+    font-size: 16px;
+    line-height: 1.1;
+    flex: 0 0 auto;
+    text-align: right;
+    justify-content: flex-end;
+  }
+
+  .dashboard-status-strip__value--text {
+    font-size: 13px;
+    max-width: 60%;
+  }
+
+  .dashboard-status-strip__sub {
+    display: none;
+  }
+
+  .dashboard-layout {
+    gap: 12px;
+  }
+
+  .agent-pool-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Agent pool cards: tighten for narrow viewports. */
+  .agent-pool-card {
+    min-height: 0;
+    padding: 10px 12px;
+  }
+
+  /* Work-queue table cells: ensure title doesn't blow out width via
+   * long unbroken strings. Existing horizontal scroll wrapper handles
+   * overflow, but we still want titles to break gracefully. */
+  .work-queue-task-link {
+    word-break: break-word;
+  }
+
+  /* Attention items: allow title to wrap to 2 lines so very long task
+   * titles don't truncate to "App…" with no context. */
+  .attention-item {
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .attention-item-title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.35;
+  }
+}
+
+/* ─── Source badge (WEB / FEISHU / CLI) in work-queue ───────────── */
+
+.dashboard-source-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 7px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  background: var(--paper-3);
+  color: var(--ink-2);
+  min-width: 42px;
+}
+
+.dashboard-source-badge--web {
+  background: var(--sage-soft);
+  color: var(--sage-deep);
+}
+
+.dashboard-source-badge--feishu {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.dashboard-source-badge--cli {
+  background: var(--paper-3);
+  color: var(--ink-2);
+}
+
+/* Right-align the UPD column so the "4m / 1h / 2d" values stack neatly. */
+.work-queue-table th:last-child,
+.work-queue-table td.work-queue-table__upd {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+/* ─── Attention items — stacked title + meta ──────────────────── */
+
+/* Mockup shows each row as a two-line stack: title (Geist) on top,
+ * `task #093 · 4m ago` mono meta below. The legacy flex layout
+ * (title left, Review link right) was kept for back-compat but the
+ * mockup-aligned stacked variant is used for all rows now. */
+.attention-item--stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+}
+
+.attention-item-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+/* Code-style for approval row titles (e.g. `bash · rm -rf …`) — small
+ * mono block on paper-2 chip background, no wrap. */
+.attention-item-title--code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--paper-2);
+  padding: 2px 6px;
+  border-radius: 2px;
+  align-self: flex-start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.attention-item-title {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+a.attention-item-title:hover {
+  color: var(--sage-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Bigger count badge in section heads — paper background with a 1px
+ * line border, mono bold digit. Matches the mockup's `[2]`, `[1]`,
+ * `[4]` chips on the section heads. */
+.attention-section[data-tone="ochre"] .attention-section__count {
+  background: var(--ochre-soft);
+  color: var(--ochre);
+  border-color: var(--ochre-soft);
+}
+
+.attention-section[data-tone="red"] .attention-section__count {
+  background: var(--red-soft);
+  color: var(--red);
+  border-color: var(--red-soft);
+}
+
+.attention-section[data-tone="blue"] .attention-section__count {
+  background: var(--blue-soft);
+  color: var(--blue);
+  border-color: var(--blue-soft);
+}
+
+/* Needs-Attention panel needs special internal padding. The panel-card
+ * itself supplies 16px 18px but we want section heads (paper-2 strip)
+ * to span the full panel width. Counteract the card padding. */
+.attention-panel.dashboard-card {
+  padding: 0;
+}
+
+.attention-panel .dashboard-panel-heading {
+  padding: 14px 18px 10px;
+  margin-bottom: 0;
+}
+
+/* ─── Footer ──────────────────────────────────────────────────── */
+
+.dashboard-footer {
+  margin-top: 6px;
+  padding: 12px 4px;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+
+.dashboard-footer__brand {
+  color: var(--ink-3);
+}
+
+.dashboard-footer__meta {
+  color: var(--ink-3);
+}
+
+.dashboard-footer__status {
+  color: var(--sage-deep);
+  font-weight: 600;
+}

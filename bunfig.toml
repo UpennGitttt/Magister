@@ -1,0 +1,17 @@
+# Bun workspace configuration for the ultimate coding manager project.
+
+[test]
+# Playwright e2e specs use `test.describe`/`test.expect` from `@playwright/test`,
+# which throws at file-load when run by Bun's test runner. Ignore them so a bare
+# `bun test` from the repo root produces a clean signal; the e2e suite has its
+# own runner via `bun run test:web:e2e`.
+# Multiple glob shapes because Bun's pathIgnorePatterns matches the
+# discovery cwd-relative path: from repo root that's `apps/web/e2e/...`,
+# from `apps/web/` cwd it's `e2e/...`. A single `**/e2e/**` only covers
+# the first case.
+pathIgnorePatterns = [
+  "**/e2e/**",
+  "**/apps/web/e2e/**",
+  "e2e/**",
+  "apps/web/e2e/**",
+]

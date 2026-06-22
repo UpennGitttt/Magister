@@ -1,0 +1,254 @@
+/*
+ * ApprovalBell styles. Spec §6.2.
+ */
+
+.magister-approval-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-geist, "Geist", -apple-system, sans-serif);
+}
+
+.magister-approval-bell__btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  padding: 5px 8px;
+  cursor: pointer;
+  color: var(--ink);
+  position: relative;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.magister-approval-bell__btn:hover {
+  background: var(--paper-2);
+}
+
+.magister-approval-bell__btn[data-empty="true"] {
+  color: var(--ink-4, var(--ink-3));
+  cursor: default;
+}
+
+.magister-approval-bell__btn[data-empty="true"]:hover {
+  background: transparent;
+}
+
+.magister-approval-bell__btn:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.magister-approval-bell__glyph {
+  display: inline-block;
+  font-size: 14px;
+}
+
+.magister-approval-bell__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--red);
+  color: var(--paper);
+  font-family: var(--font-mono, "Geist Mono", monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 999px;
+  min-width: 14px;
+  text-align: center;
+}
+
+.magister-approval-bell__popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(380px, 92vw);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(24, 22, 20, 0.12);
+  z-index: 900;
+  max-height: 60vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.magister-approval-bell__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.magister-approval-bell__count {
+  font-family: var(--font-mono, "Geist Mono", monospace);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.magister-approval-bell__empty {
+  padding: 18px 14px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.magister-approval-bell__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.magister-approval-bell__row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line-softer);
+}
+
+.magister-approval-bell__row:last-child {
+  border-bottom: none;
+}
+
+.magister-approval-bell__row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.magister-approval-bell__tool {
+  font-family: var(--font-mono, "Geist Mono", monospace);
+  font-size: 11.5px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.magister-approval-bell__summary {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.magister-approval-bell__taskref {
+  font-family: var(--font-mono, "Geist Mono", monospace);
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.magister-approval-bell__actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.magister-btn {
+  appearance: none;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+
+.magister-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.magister-btn--approve {
+  background: var(--sage);
+  color: var(--paper);
+  border-color: var(--sage-deep, var(--sage));
+}
+
+/* Approve + save rule. Visually distinct from plain Approve (heavier
+   weight + ring) so the user notices the persistence side-effect
+   before clicking. */
+.magister-btn--approve-save {
+  background: var(--sage-deep, var(--sage));
+  color: var(--paper);
+  border-color: var(--sage-deep, var(--sage));
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--paper-2, var(--paper)) inset;
+}
+
+.magister-btn--reject {
+  background: transparent;
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* Escalation preview block — rendered above the action row when the
+   approval carries proposed_prefix_rule metadata. Shows the user
+   exactly what they'd be persisting before they click. */
+.magister-approval-bell__escalation {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: var(--paper-3, var(--paper-2, transparent));
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.magister-approval-bell__escalation-label {
+  color: var(--ink-3, var(--muted));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10px;
+}
+
+.magister-approval-bell__escalation-prefix {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  background: var(--paper, transparent);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.magister-approval-bell__escalation-scope {
+  color: var(--ink-3, var(--muted));
+}
+
+.magister-btn:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+/* Mobile: enlarge bell button to a comfortable tap target inside
+   the sidebar panel-head-actions row. */
+@media (max-width: 880px) {
+  .magister-approval-bell__btn {
+    width: var(--touch-target-comfortable, 44px);
+    height: var(--touch-target-comfortable, 44px);
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .magister-approval-bell__glyph {
+    font-size: 16px;
+  }
+  .magister-approval-bell__popover {
+    width: min(340px, calc(100vw - 24px));
+  }
+}

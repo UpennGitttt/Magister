@@ -1,0 +1,192 @@
+:root, [data-theme="light"] {
+  /* Backgrounds */
+  --color-bg-page: #F5F5F7;
+  --color-bg-sidebar: #FBFBFD;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-surface-muted: #FAFAFC;
+  --color-bg-surface-hover: #F7F7FA;
+  --color-bg-column-neutral: #F8F8FA;
+  --color-bg-chat: #FFFFFF;
+
+  /* Text */
+  --color-text-primary: #1D1D1F;
+  --color-text-secondary: #52525B;
+  --color-text-muted: #86868B;
+  --color-text-subtle: #6B7280;
+  --color-text-inverse: #FFFFFF;
+
+  /* Borders and dividers */
+  --color-border-subtle: #E5E7EB;
+  --color-border-default: #DADDE3;
+  --color-border-card: #E8E8ED;
+  --color-divider: #ECECF0;
+
+  /* Accent and interaction */
+  --color-accent: #0071E3;
+  --color-accent-hover: #005FCC;
+  --color-accent-pressed: #004999;
+  --color-focus-ring: #0071E33D;
+
+  /* Status colors */
+  --color-status-backlog-dot: #9CA3AF;
+  --color-status-backlog-bg: #F3F4F6;
+  --color-status-backlog-fg: #6B7280;
+  --color-status-backlog-column: #FAFAFA;
+
+  --color-status-todo-dot: #98A2B3;
+  --color-status-todo-bg: #EEF2F6;
+  --color-status-todo-fg: #475467;
+  --color-status-todo-column: #F8FAFC;
+
+  --color-status-progress-dot: #F59E0B;
+  --color-status-progress-bg: #FFF0D6;
+  --color-status-progress-fg: #B45309;
+  --color-status-progress-column: #FFFAF2;
+
+  --color-status-review-dot: #FB923C;
+  --color-status-review-bg: #FFE6D5;
+  --color-status-review-fg: #C2410C;
+  --color-status-review-column: #FFF7F1;
+
+  --color-status-done-dot: #22C55E;
+  --color-status-done-bg: #DCFCE7;
+  --color-status-done-fg: #166534;
+  --color-status-done-column: #F0FDF4;
+
+  /* Priority colors */
+  --color-priority-low: #98A2B3;
+  --color-priority-medium: #F59E0B;
+  --color-priority-high: #F97316;
+  --color-priority-urgent: #EF4444;
+
+  /* Font stacks */
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", sans-serif;
+  --font-family-mono: "SFMono-Regular", "SF Mono", ui-monospace, Menlo, Monaco, monospace;
+
+  /* Font sizes */
+  --font-size-page-title: 3rem;
+  --font-size-section-title: 1.75rem;
+  --font-size-body-lg: 1rem;
+  --font-size-card-title: 0.9375rem;
+  --font-size-card-body: 0.8125rem;
+  --font-size-meta: 0.75rem;
+  --font-size-badge: 0.6875rem;
+  --font-size-nav: 0.875rem;
+  --font-size-number: 3.25rem;
+
+  /* Line heights */
+  --line-height-page-title: 1.08;
+  --line-height-section-title: 1.14;
+  --line-height-body-lg: 1.5;
+  --line-height-card-title: 1.35;
+  --line-height-card-body: 1.45;
+  --line-height-meta: 1.33;
+  --line-height-badge: 1.2;
+  --line-height-number: 1;
+
+  /* Letter spacing */
+  --letter-spacing-page-title: -0.04em;
+  --letter-spacing-section-title: -0.02em;
+  --letter-spacing-badge: 0.02em;
+
+  /* Spacing (4px grid) */
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+  --space-18: 72px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px #1018280A, 0 8px 24px -12px #10182814;
+  --shadow-card-hover: 0 12px 32px -16px #1018281A;
+  --shadow-panel: 0 16px 40px -20px #1018281F;
+  --shadow-focus: 0 0 0 3px #0071E33D;
+
+  /* Layout dimensions */
+  --sidebar-width: 232px;
+  --sidebar-width-collapsed: 72px;
+  --chat-panel-width: 392px;
+  --board-column-width: 248px;
+  --board-card-min-height: 136px;
+  --nav-item-height: 40px;
+  --input-height: 40px;
+  --button-height-md: 40px;
+
+  /* Legacy aliases (for components not yet migrated) */
+  --bg-primary: var(--color-bg-surface);
+  --bg-secondary: var(--color-bg-page);
+  --bg-tertiary: var(--color-bg-sidebar);
+  --bg-card: var(--color-bg-surface);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-tertiary: var(--color-text-muted);
+  --accent: var(--primary);
+  --accent-hover: #005FCC;
+  --success: #22C55E;
+  --error: #EF4444;
+  --warning: #F59E0B;
+  --font-sans: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
+  --shadow-sm: var(--shadow-card);
+  --shadow-md: var(--shadow-card);
+  --shadow-lg: var(--shadow-panel);
+  --shadow-hover: var(--shadow-card-hover);
+  --divider: 1px solid var(--color-divider);
+}
+
+[data-theme="dark"] {
+  --color-bg-page: #000000;
+  --color-bg-sidebar: #1D1D1F;
+  --color-bg-surface: #1D1D1F;
+  --color-bg-surface-muted: #2D2D2D;
+  --color-bg-surface-hover: #2D2D2D;
+  --color-bg-column-neutral: #1D1D1F;
+  --color-bg-chat: #1D1D1F;
+
+  --color-text-primary: #F5F5F7;
+  --color-text-secondary: #A1A1A6;
+  --color-text-muted: #6E6E73;
+  --color-text-subtle: #6E6E73;
+  --color-text-inverse: #1D1D1F;
+
+  --color-border-subtle: rgba(255,255,255,0.1);
+  --color-border-default: rgba(255,255,255,0.12);
+  --color-border-card: rgba(255,255,255,0.1);
+  --color-divider: rgba(255,255,255,0.08);
+
+  --color-accent: #2997FF;
+  --color-accent-hover: #64B5F6;
+  --color-accent-pressed: #1A8AFF;
+
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.2);
+  --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.5);
+  --shadow-panel: 0 16px 40px rgba(0,0,0,0.6);
+
+  --bg-primary: var(--color-bg-surface);
+  --bg-secondary: var(--color-bg-page);
+  --bg-tertiary: var(--color-bg-surface-muted);
+  --bg-card: var(--color-bg-surface);
+  --shadow-sm: var(--shadow-card);
+  --shadow-md: var(--shadow-card);
+  --shadow-lg: var(--shadow-panel);
+  --shadow-hover: var(--shadow-card-hover);
+}

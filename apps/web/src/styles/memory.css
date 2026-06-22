@@ -1,0 +1,983 @@
+/*
+ * Settings → Memory tab. Soft-machine UI: confident control-plane
+ * surfaces with strong information hierarchy, category-coded accents,
+ * tactile hover feedback. Builds on the existing token system
+ * (tokens.css + variables.css) — no new global vars, only local
+ * scope-bound additions.
+ */
+
+.mem {
+  /* P3 routing: map each memory category onto an accent in the
+   * P3 palette. Cheatsheet = blue (informational, user-curated),
+   * user = sage (positive / personal preferences), project = blue,
+   * feedback = ochre (warning / lesson-learned tone), reference =
+   * sage-deep, scratchpad = neutral ink-3. */
+  --mem-accent: var(--sage);
+  --mem-accent-soft: var(--sage-soft);
+
+  --mem-cheatsheet: var(--blue);
+  --mem-cheatsheet-soft: var(--blue-soft);
+  --mem-user: var(--sage);
+  --mem-user-soft: var(--sage-soft);
+  --mem-project: var(--blue);
+  --mem-project-soft: var(--blue-soft);
+  --mem-feedback: var(--ochre);
+  --mem-feedback-soft: var(--ochre-soft);
+  --mem-reference: var(--sage-deep);
+  --mem-reference-soft: var(--sage-soft);
+  --mem-scratchpad: var(--ink-3);
+  --mem-scratchpad-soft: rgba(24, 22, 20, 0.08);
+}
+
+[data-theme="dark"] .mem {
+  --mem-cheatsheet: #2997ff;
+  --mem-cheatsheet-soft: rgba(41, 151, 255, 0.14);
+  --mem-user: #7d7bf0;
+  --mem-user-soft: rgba(125, 123, 240, 0.18);
+  --mem-project: #34d4be;
+  --mem-project-soft: rgba(52, 212, 190, 0.16);
+  --mem-feedback: #fbbf24;
+  --mem-feedback-soft: rgba(251, 191, 36, 0.16);
+  --mem-reference: #a78bfa;
+  --mem-reference-soft: rgba(167, 139, 250, 0.18);
+  --mem-scratchpad: #a1a1a6;
+  --mem-scratchpad-soft: rgba(161, 161, 166, 0.16);
+}
+
+/* The old .mem-header / .mem-stat-chips / .mem-chip / .mem-refresh
+   / .mem-intro* rules were deleted 2026-05-19 .
+   They were orphaned by the populated-state restyle below — token
+   vars (`--mem-cheatsheet` etc.) defined in the `.mem` block above
+   are independent and still in use. Git history has the prior
+   styles if a revert is ever needed.
+   `.mem-intro__dot` survives standalone because TypedEntriesGroups
+   still uses it as the per-type accent dot in the typed-entries
+   section. */
+.mem-intro__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+/* ---- Section blocks --------------------------------------------- */
+
+.mem-section {
+  margin-bottom: 28px;
+}
+
+.mem-eyebrow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.mem-eyebrow__count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--paper-3);
+  border: 1px solid var(--line-softer);
+  border-radius: var(--radius);
+  padding: 1px 8px;
+  letter-spacing: 0.06em;
+}
+
+.mem-eyebrow__hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--ink-3);
+  margin-left: auto;
+}
+
+/* ---- Cheatsheet hero cards -------------------------------------- */
+
+.mem-cheatsheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 720px) {
+  .mem-cheatsheet-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Card primitive ---------------------------------------------- */
+
+.mem-card {
+  position: relative;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  padding: 14px 16px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition:
+    border-color 0.18s ease;
+}
+
+.mem-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--mem-accent, var(--sage));
+  opacity: 0.85;
+}
+
+.mem-card:hover {
+  border-color: var(--line);
+}
+
+.mem-card--cheatsheet { --mem-accent: var(--mem-cheatsheet); --mem-accent-soft: var(--mem-cheatsheet-soft); }
+.mem-card--user { --mem-accent: var(--mem-user); --mem-accent-soft: var(--mem-user-soft); }
+.mem-card--project { --mem-accent: var(--mem-project); --mem-accent-soft: var(--mem-project-soft); }
+.mem-card--feedback { --mem-accent: var(--mem-feedback); --mem-accent-soft: var(--mem-feedback-soft); }
+.mem-card--reference { --mem-accent: var(--mem-reference); --mem-accent-soft: var(--mem-reference-soft); }
+.mem-card--scratchpad { --mem-accent: var(--mem-scratchpad); --mem-accent-soft: var(--mem-scratchpad-soft); }
+
+.mem-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mem-card__path {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.mem-card__path-prefix {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.mem-card__tags {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mem-type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  background: var(--mem-accent-soft);
+  color: var(--mem-accent);
+  border: 1px solid transparent;
+  text-transform: uppercase;
+}
+
+.mem-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.mem-flag--aging {
+  background: var(--ochre-soft);
+  color: var(--ochre);
+}
+
+.mem-flag--stale {
+  background: var(--ochre-soft);
+  color: var(--ochre);
+}
+
+.mem-flag--code-changed {
+  background: var(--ochre-soft);
+  color: var(--ochre);
+}
+
+.mem-flag--superseded {
+  background: var(--paper-3);
+  color: var(--ink-3);
+  border-color: var(--line-softer);
+}
+
+.mem-card__desc {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin: 2px 0 0;
+}
+
+.mem-card__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.mem-card__body {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--mem-accent);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink);
+  white-space: pre-wrap;
+  max-height: 360px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+
+.mem-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.mem-btn {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink-2);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mem-btn:hover {
+  background: var(--paper-3);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.mem-btn:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.mem-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mem-btn--primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.mem-btn--primary:hover {
+  background: var(--ink-2);
+  border-color: var(--ink-2);
+  color: var(--paper);
+}
+
+.mem-btn--danger {
+  color: var(--red);
+}
+
+.mem-btn--danger:hover {
+  background: var(--red-soft);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.mem-btn--ghost {
+  border-color: transparent;
+  color: var(--ink-3);
+}
+
+.mem-btn--ghost:hover {
+  background: var(--paper-3);
+  border-color: var(--line-soft);
+  color: var(--ink);
+}
+
+/* ---- Empty-state cheatsheet card -------------------------------- */
+
+.mem-card-empty {
+  position: relative;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  padding: 20px 18px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: inherit;
+  width: 100%;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.mem-card-empty:hover {
+  border-color: var(--sage);
+  border-style: solid;
+  background: var(--sage-soft);
+}
+
+.mem-card-empty:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.mem-card-empty__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mem-card-empty__plus {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.mem-card-empty__title {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+.mem-card-empty__copy {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.mem-card-empty__cta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sage-deep);
+  margin-top: 4px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---- Empty-state for typed entries (passive copy, not CTA) ------ */
+
+.mem-empty-typed {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  padding: 20px 22px;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.mem-empty-typed code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 1px 5px;
+  background: var(--paper-3);
+  border-radius: 3px;
+  border: 1px solid var(--line-softer);
+  color: var(--ink);
+}
+
+/* ---- Editor modal ------------------------------------------------ */
+
+.mem-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 22, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+
+.mem-editor {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  width: min(1080px, 96vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+.mem-editor__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--line-soft);
+  gap: 16px;
+  background: var(--paper-2);
+}
+
+.mem-editor__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mem-editor__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.mem-editor__path {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.mem-editor__close {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.mem-editor__close:hover {
+  background: var(--paper-3);
+  color: var(--ink);
+}
+
+.mem-editor__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 880px) {
+  .mem-btn,
+  .mem-editor__close {
+    min-height: var(--touch-target-min, 40px);
+  }
+
+  .mem-editor__close {
+    width: var(--touch-target-min, 40px);
+    height: var(--touch-target-min, 40px);
+  }
+
+  .mem-editor__head {
+    padding: 12px 14px;
+    align-items: flex-start;
+  }
+
+  .mem-editor__body {
+    grid-template-columns: 1fr;
+  }
+  .mem-editor__preview {
+    border-left: none !important;
+    border-top: 1px solid var(--line-soft);
+  }
+}
+
+.mem-editor__form {
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: auto;
+}
+
+.mem-editor__preview {
+  background: var(--paper-2);
+  border-left: 1px solid var(--line-soft);
+  padding: 18px 22px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mem-editor__preview-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.mem-editor__preview-body {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  white-space: pre-wrap;
+  flex: 1;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mem-editor__preview-empty {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  font-style: italic;
+}
+
+.mem-editor__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mem-editor__label {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+.mem-editor__hint {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+
+.mem-editor__input,
+.mem-editor__textarea {
+  width: 100%;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 12.5px;
+  font-family: inherit;
+}
+
+.mem-editor__textarea {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  resize: vertical;
+  min-height: 280px;
+}
+
+.mem-editor__input:focus,
+.mem-editor__textarea:focus {
+  outline: 2px solid var(--sage);
+  outline-offset: 0;
+  border-color: var(--sage);
+}
+
+.mem-editor__error {
+  border-radius: var(--radius);
+  border: 1px solid var(--red);
+  background: var(--red-soft);
+  color: var(--red);
+  padding: 8px 11px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.mem-editor__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--line-soft);
+  background: var(--paper);
+}
+
+/* ---- First-time onboarding hero --------------------------------
+   Shown when total === 0. Replaces the stat-chip header + intro
+   grid + three empty sections with a single focused panel: title,
+   three-concept explainer, primary CTA. Concept-led (frontend-design
+   skill 2026-05-19): editorial mood — serif-weight headline, mono
+   eyebrow, generous breathing, single tactile CTA. */
+.mem-hero {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 32px 28px 28px;
+  border: 1px solid var(--line-soft);
+  border-radius: calc(var(--radius) * 2);
+  background: var(--paper);
+  box-shadow: 0 1px 0 var(--paper-3), 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.mem-hero__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.mem-hero__title {
+  margin: 6px 0 10px;
+  font-family: var(--font-geist);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.mem-hero__lede {
+  margin: 0 0 22px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 56ch;
+}
+
+.mem-hero__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.mem-hero__row {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  align-items: start;
+  gap: 14px;
+}
+
+.mem-hero__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-top: 7px;
+  justify-self: center;
+}
+
+.mem-hero__row-title {
+  font-family: var(--font-geist);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.mem-hero__row-body {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-3);
+  max-width: 60ch;
+}
+
+.mem-hero__row-body code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 1px 5px;
+  background: var(--paper-3);
+  border-radius: 3px;
+  border: 1px solid var(--line-softer);
+  color: var(--ink);
+}
+
+.mem-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 18px;
+  border-top: 1px solid var(--line-softer);
+}
+
+.mem-hero__cta {
+  appearance: none;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 9px 16px;
+  font-family: var(--font-geist);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+.mem-hero__cta:hover {
+  background: color-mix(in srgb, var(--ink) 88%, var(--paper) 12%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+.mem-hero__cta:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.mem-hero__cta:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.mem-hero__hint {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+
+/* ============================================================
+   Populated-state editorial top (2026-05-19 restyle)
+   Replaces the old `.mem-header` (4 stat chips) + `.mem-intro`
+   (3-concept callout grid) for the populated state. Hero-style
+   title + lede + inline summary stats; the three concepts are
+   now conveyed by each section's caption below instead of a
+   redundant tile grid.
+   `.mem-header` / `.mem-intro` / `.mem-chip*` CSS above is kept
+   intact for backward compat / dark theme variables — currently
+   no markup references them, but token vars (`--mem-cheatsheet`,
+   etc.) defined alongside are still used by the new layout.
+   ============================================================ */
+
+.mem-toplevel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 8px 0 32px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.mem-toplevel__primary {
+  min-width: 0;
+  max-width: 640px;
+}
+
+.mem-toplevel__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.mem-toplevel__title {
+  margin: 6px 0 8px;
+  font-family: var(--font-geist);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.mem-toplevel__lede {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 60ch;
+}
+
+.mem-toplevel__stats {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+.mem-toplevel__stat strong {
+  font-family: var(--font-geist);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  margin-right: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mem-toplevel__stat-sep {
+  color: var(--ink-3);
+  opacity: 0.55;
+}
+
+.mem-toplevel__refresh {
+  flex-shrink: 0;
+  appearance: none;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink-2);
+  padding: 7px 13px;
+  font-family: var(--font-geist);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, color 120ms;
+  margin-top: 2px;
+}
+
+.mem-toplevel__refresh:hover {
+  background: var(--paper-3);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.mem-toplevel__refresh:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+/* Section headings — replaces `.mem-eyebrow` for new markup.
+   Strong sans-serif section title + colored dot + count, with a
+   small mono caption explaining the concept (was previously a
+   right-aligned `eyebrow__hint`). Caption sits BELOW the title so
+   it reads as section copy, not as a row of chrome. */
+.mem-section__head {
+  margin: 0 0 14px;
+}
+
+.mem-section__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  font-family: var(--font-geist);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.mem-section__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.mem-section__count {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  background: var(--paper-3);
+  border: 1px solid var(--line-softer);
+  border-radius: var(--radius);
+  padding: 1px 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mem-section__caption {
+  margin: 0;
+  padding-left: 19px; /* align under the section title text (dot + gap) */
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.55;
+  color: var(--ink-3);
+  max-width: 64ch;
+}
+
+.mem-section__caption code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 5px;
+  background: var(--paper-3);
+  border-radius: 3px;
+  border: 1px solid var(--line-softer);
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .mem-toplevel {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .mem-toplevel__refresh {
+    align-self: flex-start;
+  }
+}

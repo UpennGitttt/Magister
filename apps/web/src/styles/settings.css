@@ -1,0 +1,1975 @@
+/*
+ * Settings page styles — tokenized onto the P3 palette
+ * (docs/specs/2026-05-16-ui-redesign-p3-spec.md §5.6–§5.11).
+ *
+ * Phase 2 redesign: tab nav becomes a flat list with leading "·"
+ * glyph, content surfaces use `--paper` / `--ink` / `--sage`, all
+ * radii collapse onto the single `--radius` (4px), inputs use
+ * `--paper-2` backgrounds with hairline `--line-soft` borders, and
+ * form section labels read as 10px mono uppercase with the spec
+ * letter-spacing.
+ */
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: calc(100dvh - 120px);
+  font-family: var(--font-geist);
+  color: var(--ink);
+}
+
+.settings-page__header h1 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.settings-page__header p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.settings-page__layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Tab nav (left rail) — flat list, leading "·" glyph, active
+ * state inverts to `--ink` background.
+ * ───────────────────────────────────────────────────────────── */
+
+.settings-nav {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-self: start;
+}
+
+.settings-nav__item {
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-geist);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 7px 9px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.settings-nav__item::before {
+  content: "·";
+  font-family: var(--font-mono);
+  font-size: 13px;
+  width: 12px;
+  text-align: center;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+
+.settings-nav__item:hover {
+  background: rgba(24, 22, 20, 0.06);
+  color: var(--ink);
+}
+
+.settings-nav__item--active,
+.settings-nav__item--active:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.settings-nav__item--active::before {
+  color: var(--paper);
+}
+
+.settings-nav__count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+.settings-nav__item--active .settings-nav__count {
+  color: var(--paper-3);
+}
+
+.settings-nav__item:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.settings-content {
+  min-width: 0;
+}
+
+.settings-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.settings-section-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.settings-section-header p {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  line-height: 1.45;
+}
+
+.settings-section-header button {
+  flex: 0 0 auto;
+}
+
+.settings-mobile-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.settings-mobile-toolbar__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Content-head — title + subtitle + primary action row that
+ * sits above the tab body (per mockup §05-settings). Replaces
+ * the previous "wrap the action button inside the first card"
+ * pattern used by the Agents tab.
+ * ───────────────────────────────────────────────────────────── */
+
+.settings-content-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.settings-content-head__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.settings-content-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.settings-content-sub {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+
+.settings-content-head__action {
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Agent row — collapsed/expanded summary card pattern per
+ * mockup §05-settings. The expanded body re-uses
+ * `.agent-form-grid` for the 3-column layout.
+ * ───────────────────────────────────────────────────────────── */
+
+.agent-row {
+  border: 1px solid var(--line-soft);
+  background: var(--paper-2);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.agent-summary {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1fr) auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 11px 14px;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.agent-summary:hover {
+  background: rgba(24, 22, 20, 0.03);
+}
+
+.agent-summary:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: -2px;
+}
+
+.agent-summary--open {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.ag-glyph {
+  width: 32px;
+  height: 32px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.ag-glyph--live {
+  background: var(--sage);
+}
+
+.ag-identity {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ag-roleid {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ag-label {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ag-modelinfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ag-model {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ag-runtime {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ag-runtime > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ag-runtime__pill {
+  background: var(--paper-3);
+  color: var(--ink);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.ag-runtime__sep {
+  color: var(--ink-4);
+}
+
+.ag-state {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ag-state--live {
+  color: var(--sage-deep);
+}
+
+.ag-state--live::before {
+  content: "●";
+  color: var(--sage);
+}
+
+.ag-chev {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  width: 14px;
+  text-align: center;
+}
+
+.agent-row__form {
+  background: var(--paper);
+  padding: 16px 18px 14px;
+}
+
+@media (max-width: 880px) {
+  .agent-summary {
+    grid-template-columns: 32px minmax(0, 1fr) auto auto;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .agent-summary .ag-modelinfo {
+    grid-column: 1 / -1;
+    padding-left: 42px;
+  }
+}
+
+.settings-loading,
+.settings-empty {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  padding: 20px;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.settings-error {
+  margin: 0;
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  background: var(--red-soft);
+  color: var(--red);
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.settings-warning {
+  margin: 0;
+  border: 1px solid var(--ochre);
+  border-radius: var(--radius);
+  background: var(--ochre-soft);
+  color: var(--ochre);
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Card primitive — used by every list (Providers, Models,
+ * Agents, Skills, MCP, etc).
+ * ───────────────────────────────────────────────────────────── */
+
+.config-card-list {
+  display: grid;
+  gap: 10px;
+}
+
+.config-card {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  padding: 14px 16px;
+  min-width: 0;
+}
+
+.config-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  min-width: 0;
+}
+
+.config-card-header strong {
+  min-width: 0;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.35;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.config-card-meta {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.config-card-meta code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  background: var(--paper-3);
+  color: var(--ink);
+  padding: 1px 5px;
+  border-radius: 3px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.config-edit-btn {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink-2);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.config-edit-btn:hover {
+  background: var(--paper-3);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.config-edit-btn:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.config-edit-btn--active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.config-edit-btn--active:hover {
+  background: var(--ink-2);
+  color: var(--paper);
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Form (expanded edit panel) — Phase 2: 3-column section grid
+ * for the Agents tab; other tabs render a single column and
+ * the grid collapses gracefully.
+ * ───────────────────────────────────────────────────────────── */
+
+.config-form {
+  margin-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  background: var(--paper);
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 16px 18px 14px;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.config-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.config-field label {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.config-input {
+  width: 100%;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.45;
+  min-height: 32px;
+  padding: 6px 9px;
+}
+
+.config-input:focus {
+  outline: 2px solid var(--sage);
+  outline-offset: 0;
+  border-color: var(--sage);
+}
+
+.config-input::placeholder {
+  color: var(--ink-4);
+}
+
+.config-field-hint {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.config-field-hint code {
+  background: var(--paper-3);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10.5px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tool-restriction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 6px;
+}
+
+.tool-restriction-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  color: var(--ink-2);
+  padding: 6px 8px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.tool-restriction-item--on {
+  border-color: var(--sage);
+  background: var(--sage-soft);
+  color: var(--sage-deep);
+}
+
+.tool-restriction-item input {
+  flex: 0 0 auto;
+}
+
+.tool-restriction-item__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.config-list-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.config-card--new {
+  border: 1px dashed var(--sage);
+  background: var(--sage-soft);
+}
+
+.config-form-section {
+  display: grid;
+  gap: 10px;
+}
+
+.config-form-section + .config-form-section {
+  border-top: 1px solid var(--line-softer);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+/* Three-column form grid used by AgentList §5.7 — section headers
+ * sit at top of each column, fields stack vertically inside.
+ *
+ * Phase-7 alignment polish (2026-05-17): the form has 5 sections
+ * (Identity / Runtime / Model / Reasoning / Tool Profile or Custom
+ * Config) but a 3-column grid leaves the 6th cell empty. Also,
+ * default `align-items: stretch` made each row's height = tallest
+ * cell, so Runtime + Model rendered with big white-space below when
+ * Identity's Description textarea pushed row 1 tall. Fix:
+ *   - `align-items: start` so each section sits at the row top
+ *   - `grid-auto-rows: min-content` so rows size to their content
+ *   - the last section (Tool Profile / Custom Config) spans 2 cells
+ *     to soak up the empty third cell on row 2, and to give the
+ *     Instructions textarea breathing room in codex-CLI mode.
+ */
+.agent-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: min-content;
+  align-items: start;
+  gap: 18px 22px;
+}
+
+.agent-form-grid > .config-form-section:nth-child(5) {
+  grid-column: span 2;
+}
+
+@media (max-width: 960px) {
+  .agent-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .agent-form-grid > .config-form-section:nth-child(5) {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .agent-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .agent-form-grid > .config-form-section:nth-child(5) {
+    grid-column: 1;
+  }
+}
+
+/* Section inside agent-form-grid: a column whose first child is a
+ * mono 10px uppercase title and whose remaining children stack
+ * vertically. */
+.agent-form-grid .config-form-section {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.agent-form-grid .config-form-section + .config-form-section {
+  border-top: none;
+}
+
+.config-form-section-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.config-field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .config-field-pair {
+    grid-template-columns: 1fr;
+  }
+}
+
+.config-card-action-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.config-card-cascade-hint {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--ochre);
+  background: var(--ochre-soft);
+  border-radius: var(--radius);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.config-card-cascade-hint code {
+  background: var(--paper);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.agent-model-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.config-form-disclosure {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--ink-3);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.config-form-disclosure > span:first-child {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.config-form-disclosure:hover {
+  color: var(--ink);
+}
+
+.config-form-disclosure-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.config-form-disclosure-summary {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.config-form-disclosure-chevron {
+  font-size: 10px;
+  color: var(--ink-3);
+  transition: transform 0.15s ease;
+}
+
+.config-form-disclosure[aria-expanded="true"] .config-form-disclosure-chevron {
+  transform: rotate(90deg);
+}
+
+select.config-input {
+  background-color: var(--paper-2);
+  color: var(--ink);
+}
+
+select.config-input option {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+textarea.config-input {
+  min-height: 110px;
+  resize: vertical;
+  font-family: var(--font-mono);
+}
+
+.config-save-btn {
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.config-save-btn:hover:not(:disabled) {
+  background: var(--ink-2);
+}
+
+.config-save-btn:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.config-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.config-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.config-form-footer-spacer {
+  flex: 1;
+}
+
+.config-delete-link {
+  background: transparent;
+  border: none;
+  color: var(--red);
+  font-size: 11.5px;
+  cursor: pointer;
+  padding: 4px 6px;
+  text-decoration: none;
+}
+
+.config-delete-link:hover {
+  text-decoration: underline;
+}
+
+.config-delete-link:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+.config-delete-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Status badges (legacy class names retained; new variants
+ * route through Pill component but settings still uses these
+ * in places).
+ * ───────────────────────────────────────────────────────────── */
+
+.settings-page .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius);
+  padding: 2px 7px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.settings-page .status-badge.status-subtle {
+  background: var(--paper-3);
+  color: var(--ink-2);
+  border: 1px solid var(--line-softer);
+}
+
+.settings-page .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ink-3);
+}
+
+.settings-page .status-dot--active {
+  background: var(--sage);
+}
+
+.role-mapping-card {
+  min-height: 0;
+}
+
+.role-mapping-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.role-mapping-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 10rem) minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 10px;
+}
+
+.role-mapping-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.role-mapping-role,
+.role-mapping-control {
+  min-width: 0;
+}
+
+.role-mapping-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-soft);
+  background: var(--paper-3);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+}
+
+.role-runtime-badge {
+  text-transform: lowercase;
+}
+
+.role-row-status {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.role-row-status--success {
+  color: var(--sage-deep);
+}
+
+.role-row-error {
+  grid-column: 2 / -1;
+  margin: 0;
+  font-size: 12px;
+  color: var(--red);
+}
+
+.role-mapping-select {
+  min-width: min(24rem, 100%);
+  flex: 1 1 16rem;
+}
+
+@media (max-width: 960px) {
+  .settings-page {
+    min-height: calc(100dvh - 96px);
+  }
+
+  .settings-page__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px;
+  }
+
+  .settings-nav__item {
+    flex: 0 0 auto;
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .config-form-footer {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .role-mapping-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .role-row-error {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 880px) {
+  .settings-page {
+    gap: 12px;
+  }
+
+  /* The global mobile bar already shows "Settings"; hide the
+     duplicate in-page h1 on phones. Description below stays. */
+  .settings-page__header h1 {
+    display: none;
+  }
+  .settings-page__header p {
+    margin: 0;
+  }
+
+  .settings-nav__item {
+    min-height: var(--touch-target-min, 40px);
+  }
+
+  .config-edit-btn,
+  .config-save-btn,
+  .config-delete-link,
+  .approval-rules__toggle,
+  .approval-rules__delete,
+  .diagnostics-panel select {
+    min-height: var(--touch-target-min, 40px);
+    padding-inline: 14px;
+  }
+
+  .tool-restriction-item {
+    min-height: var(--touch-target-min, 40px);
+    padding: 8px 10px;
+  }
+
+  .config-card-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .config-card-header > div,
+  .config-card-header > span,
+  .config-card-action-cluster {
+    min-width: 0;
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .settings-page .status-badge {
+    max-width: 100%;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .config-card {
+    padding: var(--mobile-panel-padding, 14px);
+  }
+
+  .config-input,
+  .settings-page input,
+  .settings-page textarea,
+  .settings-page select {
+    font-size: 16px;
+  }
+
+  /* Settings content head: stack title + action so very long titles
+     don't squeeze the action button off-screen. */
+  .settings-content-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .settings-content-head__action {
+    align-self: flex-start;
+  }
+
+  .settings-section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .settings-section-header button {
+    align-self: flex-start;
+    min-height: var(--touch-target-min, 40px);
+    padding-inline: 14px;
+  }
+
+  .settings-mobile-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .settings-mobile-toolbar__actions {
+    width: 100%;
+  }
+
+  /* Long model/provider/runtime identifiers need to wrap before the
+     540px phone-only breakpoint; many mobile devices render wider. */
+  .agent-summary,
+  .ag-modelinfo,
+  .ag-roleid,
+  .ag-label,
+  .ag-model,
+  .ag-runtime,
+  .ag-runtime > span:last-child,
+  .config-card-meta,
+  .config-card-title,
+  .config-card-header strong {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  .ag-runtime {
+    flex-wrap: wrap;
+  }
+}
+
+/* Very narrow phones keep Settings tabs as a horizontal strip; a
+ * vertical nine-tab list pushed every landing page below the first
+ * viewport. */
+@media (max-width: 540px) {
+  .settings-nav {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .settings-nav__item {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  /* Agent summary at narrow widths: tighten gap and pull state
+     pill / chevron closer together. The 880px rule already wraps
+     modelinfo to its own row (grid-column: 1/-1). */
+  .agent-summary {
+    gap: 8px;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    padding: 10px 12px;
+  }
+
+  .agent-summary .ag-modelinfo {
+    grid-column: 2 / -1;
+    padding-left: 0;
+  }
+
+  .agent-summary .ag-state {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .agent-summary .ag-chev {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .ag-state {
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+  }
+
+  /* Diagnostics stats: 6 cells in 2-col = 3 rows; keep readable. */
+  .diagnostics-stat {
+    padding: 8px 12px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Diagnostics panel — Phase 2: 6-cell stats strip, tokenized
+ * table styling.
+ * ───────────────────────────────────────────────────────────── */
+
+.diagnostics-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.diagnostics-panel .settings-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.diagnostics-panel .settings-section-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.diagnostics-panel .settings-section-header p {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+.diagnostics-panel .settings-section h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.diagnostics-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  margin: 0 0 18px;
+  overflow: hidden;
+}
+
+@media (max-width: 880px) {
+  .diagnostics-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .diagnostics-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.diagnostics-stat {
+  padding: 10px 14px;
+  border-right: 1px solid var(--line-softer);
+  background: transparent;
+  min-width: 0;
+}
+
+.diagnostics-stat:last-child {
+  border-right: none;
+}
+
+.diagnostics-stat__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+
+.diagnostics-stat__value {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 4px;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.diagnostics-stat__value--warn {
+  color: var(--ochre);
+}
+
+.diagnostics-stat__sub {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.diagnostics-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+}
+
+.diagnostics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+.diagnostics-table th,
+.diagnostics-table td {
+  text-align: left;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line-softer);
+}
+
+.diagnostics-table th {
+  background: var(--paper-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.diagnostics-table tbody tr:hover {
+  background: rgba(24, 22, 20, 0.04);
+}
+
+.diagnostics-table tbody tr:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: -2px;
+}
+
+.diagnostics-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.diagnostics-table code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink);
+}
+
+.diagnostics-table time {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+
+.diagnostics-table-foot {
+  margin: 8px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+.diagnostics-panel .badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.diagnostics-panel .badge--warn {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.diagnostics-panel .badge--info {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.diagnostics-panel select {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  color: var(--ink);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Spec §1 V1.1 (2026-05-17) — Approval Rules tab styles. */
+.approval-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.approval-rules__intro p {
+  margin: 0 0 6px;
+  color: var(--ink-2, var(--ink));
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.approval-rules__meta {
+  color: var(--ink-3, var(--muted));
+  font-size: 12px;
+}
+
+.approval-rules__table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line-soft, var(--border, #d8d4cc));
+  border-radius: var(--radius);
+  background: var(--paper-2, transparent);
+  -webkit-overflow-scrolling: touch;
+}
+
+.approval-rules__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 760px;
+}
+
+.approval-rules__table th,
+.approval-rules__table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border, #d8d4cc);
+  vertical-align: middle;
+}
+
+.approval-rules__table th {
+  font-weight: 600;
+  color: var(--ink-3, var(--muted));
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--paper-2, transparent);
+}
+
+.approval-rules__row--disabled td {
+  opacity: 0.55;
+}
+
+.approval-rules__pattern {
+  display: inline-block;
+  max-width: 28rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  background: var(--paper-3, #f0ede5);
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-right: 6px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.approval-rules__kind {
+  font-size: 10px;
+  color: var(--ink-3, var(--muted));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.approval-rules__path {
+  display: block;
+  font-size: 10.5px;
+  color: var(--ink-3, var(--muted));
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.approval-rules__toggle,
+.approval-rules__delete {
+  padding: 3px 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border, #d8d4cc);
+  background: var(--paper-2, transparent);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.approval-rules__toggle:hover {
+  background: var(--paper-3, #f0ede5);
+}
+
+.approval-rules__delete {
+  color: var(--red, #c0392b);
+  border-color: var(--red, #c0392b);
+}
+
+.approval-rules__delete:hover {
+  background: var(--red, #c0392b);
+  color: var(--paper, #fff);
+}
+
+.approval-rules__toggle:disabled,
+.approval-rules__delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Settings → Setup (CLI agent onboarding) */
+.cli-setup__cards {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.cli-setup__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.cli-setup__badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cli-setup__hint p {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.cli-setup__cmd {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.cli-setup__ready {
+  font-size: 12.5px;
+  color: #16a34a;
+  margin: 0;
+}
+
+/* ── Onboarding wizard (Settings → Setup) ───────────────────────────── */
+.onboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.onboard__banner {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.onboard__banner--ok {
+  border-color: color-mix(in srgb, #16a34a 40%, var(--line));
+  background: color-mix(in srgb, #16a34a 10%, transparent);
+  color: #16a34a;
+}
+
+.onboard__rail {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.onboard__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.onboard__step--active {
+  border-color: var(--accent, #2563eb);
+  color: var(--ink-1);
+  background: var(--surface);
+}
+
+.onboard__step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.onboard__step-dot--done {
+  border-color: #16a34a;
+  color: #16a34a;
+  background: color-mix(in srgb, #16a34a 12%, transparent);
+}
+
+.onboard__req {
+  color: var(--ink-3);
+  font-style: normal;
+  font-size: 11px;
+}
+
+.onboard__card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.onboard__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.onboard__badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink-3);
+  background: var(--surface-soft);
+  white-space: nowrap;
+}
+
+.onboard__badge--ok {
+  border-color: #16a34a;
+  color: #16a34a;
+  background: color-mix(in srgb, #16a34a 12%, transparent);
+}
+
+.onboard__hint {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.onboard__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 520px;
+}
+
+.onboard__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.onboard__field input,
+.onboard__field select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-1);
+  font-size: 13px;
+}
+
+.onboard__actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Catalog "Browse models" picker ─────────────────────────────────────── */
+.catalog-panel {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface-muted);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: catalog-reveal 180ms ease;
+}
+@keyframes catalog-reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.catalog-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.catalog-panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-card-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.catalog-panel__count {
+  font-size: var(--font-size-badge);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.catalog-panel__hint {
+  margin: 0;
+  font-size: var(--font-size-meta);
+  color: var(--color-text-muted);
+}
+.catalog-panel__result {
+  margin: 0;
+  font-size: var(--font-size-card-body);
+  font-weight: 500;
+  color: var(--color-status-done-fg);
+  background: var(--color-status-done-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+.catalog-selectall {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-size: var(--font-size-card-body);
+  color: var(--color-text-secondary);
+  user-select: none;
+}
+.catalog-selectall__n { color: var(--color-text-muted); }
+
+.catalog-model-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 22rem;
+  overflow-y: auto;
+}
+.catalog-model-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+  /* button-safe resets: this row is a <label> in the picker, a <button> in the
+     Models-tab autofill list. */
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.catalog-model-row:hover { background: var(--color-bg-surface-hover); }
+.catalog-model-row--selected {
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+  background: var(--color-bg-surface);
+}
+.catalog-model-row--added {
+  opacity: 0.6;
+  cursor: default;
+  background: var(--color-bg-surface-muted);
+}
+.catalog-model-row--added:hover { background: var(--color-bg-surface-muted); }
+.catalog-model-row__check { flex-shrink: 0; cursor: inherit; }
+.catalog-model-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.catalog-model-row__name {
+  font-size: var(--font-size-card-body);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.catalog-model-row__id {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-meta);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.catalog-model-row__badges {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+.catalog-badge {
+  font-size: var(--font-size-badge);
+  font-weight: 500;
+  color: var(--color-text-subtle);
+  background: var(--color-bg-surface-muted);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+.catalog-badge--vision {
+  color: var(--color-status-review-fg);
+  background: var(--color-status-review-bg);
+  border-color: transparent;
+}
+.catalog-badge--added {
+  color: var(--color-status-done-fg);
+  background: var(--color-status-done-bg);
+  border-color: transparent;
+}
+.catalog-panel__footer {
+  display: flex;
+  justify-content: flex-end;
+  position: sticky;
+  bottom: 0;
+}
+
+/* ── New-provider brand picker ──────────────────────────────────────────── */
+.provider-brand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-2);
+}
+.provider-brand-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 120ms ease;
+}
+.provider-brand-tile:hover {
+  background: var(--color-bg-surface-hover);
+  transform: translateY(-1px);
+}
+.provider-brand-tile:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.provider-brand-tile--selected,
+.provider-brand-tile--selected:hover {
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+.provider-brand-tile--custom {
+  border-style: dashed;
+}
+.provider-brand-tile__name {
+  font-size: var(--font-size-card-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.provider-brand-tile__meta {
+  font-size: var(--font-size-meta);
+  color: var(--color-text-muted);
+  font-family: var(--font-family-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.catalog-model-row__source { color: var(--color-text-subtle); }
+
+/* ── API key field: reveal toggle + configured tag ──────────────────────── */
+.key-configured-tag {
+  margin-left: var(--space-2);
+  font-size: var(--font-size-badge);
+  font-weight: 600;
+  color: var(--color-status-done-fg);
+  background: var(--color-status-done-bg);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.key-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.key-input-wrap .key-input {
+  flex: 1;
+  padding-right: 2.5rem; /* room for the eye button */
+}
+.key-eye-btn {
+  position: absolute;
+  right: 6px;
+  height: 28px;
+  width: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  opacity: 0.75;
+  transition: background 150ms ease, opacity 150ms ease;
+}
+.key-eye-btn:hover:not(:disabled) { background: var(--color-bg-surface-hover); opacity: 1; }
+.key-eye-btn:disabled { cursor: default; opacity: 0.5; }

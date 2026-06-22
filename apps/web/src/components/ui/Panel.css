@@ -1,0 +1,65 @@
+/*
+ * Panel — bordered card with title / subtitle / actions / body / foot
+ * slots. Matches the P3 dashboard work-queue look.
+ *
+ * Spec: docs/specs/2026-05-16-ui-redesign-p3-spec.md §4.4.
+ */
+
+.magister-panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 4px);
+  color: var(--ink);
+  font-family: var(--font-geist);
+  display: flex;
+  flex-direction: column;
+}
+
+.magister-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.magister-panel__head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.magister-panel__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+
+.magister-panel__subtitle {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.magister-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.magister-panel__body {
+  padding: 14px 18px;
+}
+
+.magister-panel__foot {
+  padding: 9px 18px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 11px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+}
