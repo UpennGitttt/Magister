@@ -41,6 +41,9 @@ export async function scanCliBridges(
       errors.push({ cli: "opencode", message: e instanceof Error ? e.message : String(e) });
       return [];
     }),
+    // ponytail: no external MCP scanner for kiro yet — add a lister when
+    // kiro-cli exposes an `mcp list` equivalent worth bridging.
+    kiro: [],
   };
 
   return { skills, mcpByCli, errors };

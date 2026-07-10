@@ -30,18 +30,21 @@ const CLI_LOGICAL_COMMAND: Record<CliRuntime, string> = {
   codex: "codex",
   "claude-code": "claude",
   opencode: "opencode",
+  kiro: "kiro-cli",
 };
 
 const CLI_ENV_OVERRIDE: Record<CliRuntime, string> = {
   codex: "MAGISTER_CODEX_BIN",
   "claude-code": "MAGISTER_CLAUDE_CODE_BIN",
   opencode: "MAGISTER_OPENCODE_BIN",
+  kiro: "MAGISTER_KIRO_BIN",
 };
 
 const CLI_LEGACY_LINUX_DEFAULT: Record<CliRuntime, string> = {
   codex: "/usr/bin/codex",
   "claude-code": "/usr/bin/claude",
   opencode: "/usr/bin/opencode",
+  kiro: "/usr/bin/kiro-cli",
 };
 
 function defaultCandidates(runtime: CliRuntime, home: string): string[] {
@@ -63,6 +66,11 @@ function defaultCandidates(runtime: CliRuntime, home: string): string[] {
       join(home, ".claude", "local", "claude"),
       ...shared,
     ];
+  }
+
+  if (runtime === "kiro") {
+    // kiro-cli ships via the AWS toolbox installer (~/.toolbox/bin).
+    return [join(home, ".toolbox", "bin", "kiro-cli"), ...shared];
   }
 
   return shared;

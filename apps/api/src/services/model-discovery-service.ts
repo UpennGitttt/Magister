@@ -45,7 +45,7 @@ const CLAUDE_CODE_MODEL_CATALOG: DiscoveredModel[] = [
 ];
 
 function normalizeRuntimeType(runtimeType: AgentRuntimeType | null | undefined): AgentRuntimeType {
-  if (runtimeType === "codex" || runtimeType === "opencode" || runtimeType === "claude-code") {
+  if (runtimeType === "codex" || runtimeType === "opencode" || runtimeType === "claude-code" || runtimeType === "kiro") {
     return runtimeType;
   }
 
@@ -272,6 +272,34 @@ async function discoverClaudeCodeModels(commandPath?: string | null): Promise<Di
   }
 }
 
+async function discoverKiroModels(commandPath?: string | null): Promise<DiscoveredModel[]> {
+  try {
+    const resolvedCommandPath = (await resolveCliExecutable("kiro", commandPath)).command;
+    // kiro-cli 2.12: `chat --list-models -f json` prints
+    // {"models":[{"model_id","model_name","description",...}],"default_model":"..."}
+    const proc = spawnProcess([resolvedCommandPath, "chat", "--list-models", "-f", "json"]);
+    const [exitCode, stdout] = await Promise.all([proc.exited, proc.stdoutText()]);
+    if (exitCode !== 0) {
+      return [];
+    }
+    const parsed = JSON.parse(stdout) as {
+      models?: Array<{ model_id?: string; model_name?: string; description?: string }>;
+      default_model?: string;
+    };
+    return (parsed.models ?? [])
+      .filter((m) => typeof m.model_id === "string" && m.model_id.length > 0)
+      .filter((m) => !(m.description ?? "").includes("[Deprecated]"))
+      .map((m) => ({
+        id: m.model_id as string,
+        provider: "kiro",
+        label: m.model_name || (m.model_id as string),
+        ...(m.model_id === parsed.default_model ? { isDefault: true } : {}),
+      }));
+  } catch {
+    return [];
+  }
+}
+
 export function clearDiscoveredModelCache() {
   discoveryCache.clear();
 }
@@ -303,6 +331,8 @@ export async function discoverModels(
     if (items.length === 0) {
       items = cloneModelList(CLAUDE_CODE_MODEL_CATALOG);
     }
+  } else if (normalizedRuntimeType === "kiro") {
+    items = await discoverKiroModels(commandPath);
   }
 
   setCachedModels(cacheKey, items);

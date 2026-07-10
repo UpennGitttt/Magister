@@ -44,6 +44,7 @@ function cliSkillDir(home: string, cli: CliRuntime): string {
     case "codex":       return join(home, ".codex", "skills");
     case "claude-code": return join(home, ".claude", "skills");
     case "opencode":    return join(home, ".config", "opencode", "skills");
+    case "kiro":        return join(home, ".kiro", "skills");
   }
 }
 

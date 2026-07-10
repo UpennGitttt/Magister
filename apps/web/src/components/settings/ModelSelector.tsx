@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { getAgentModels } from "../../lib/api";
 import type { DiscoveredModel } from "../../lib/types";
 
-type RuntimeType = "ucm" | "codex" | "opencode" | "claude-code";
+type RuntimeType = "ucm" | "codex" | "opencode" | "claude-code" | "kiro";
 
 type ModelSelectorProps = {
   runtimeType: RuntimeType;

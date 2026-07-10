@@ -24,7 +24,7 @@ export const BUILTIN_AGENT_ROLE_IDS = [
 ] as const;
 export type BuiltinAgentRoleId = (typeof BUILTIN_AGENT_ROLE_IDS)[number];
 export type AgentToolProfile = "full" | "coding" | "research" | "minimal";
-export type AgentRuntimeType = "ucm" | "codex" | "opencode" | "claude-code";
+export type AgentRuntimeType = "ucm" | "codex" | "opencode" | "claude-code" | "kiro";
 
 export type AgentProfile = Omit<
   AgentProfileSelect,
@@ -287,7 +287,7 @@ function normalizeRuntimeType(value: string | null | undefined): AgentRuntimeTyp
   }
 
   const trimmed = value.trim();
-  if (trimmed === "ucm" || trimmed === "codex" || trimmed === "opencode" || trimmed === "claude-code") {
+  if (trimmed === "ucm" || trimmed === "codex" || trimmed === "opencode" || trimmed === "claude-code" || trimmed === "kiro") {
     return trimmed;
   }
 

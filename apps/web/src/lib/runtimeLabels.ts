@@ -2,5 +2,6 @@ export function formatRuntimeLabel(runtimeType: string | null | undefined): stri
   const normalized = (runtimeType ?? "ucm").trim().toLowerCase();
   if (normalized === "ucm" || normalized.length === 0) return "Magister";
   if (normalized === "claude-code") return "Claude Code";
+  if (normalized === "kiro") return "Kiro";
   return normalized.toUpperCase();
 }

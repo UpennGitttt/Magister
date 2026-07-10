@@ -34,8 +34,8 @@ function titleCase(value: string) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function normalizeRuntimeType(value: AgentProfile["runtimeType"]): "ucm" | "codex" | "opencode" | "claude-code" {
-  if (value === "codex" || value === "opencode" || value === "claude-code") {
+function normalizeRuntimeType(value: AgentProfile["runtimeType"]): "ucm" | "codex" | "opencode" | "claude-code" | "kiro" {
+  if (value === "codex" || value === "opencode" || value === "claude-code" || value === "kiro") {
     return value;
   }
   return "ucm";

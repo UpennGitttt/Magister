@@ -441,3 +441,45 @@ test("buildCliArgs for claude-code: worktree workspace → no --add-dir (codex-s
   );
   expect(result.argv).not.toContain("--add-dir");
 });
+
+test("buildCliArgs for kiro: headless chat argv with model + effort", () => {
+  const result = buildCliArgs(
+    "/usr/local/bin/kiro-cli",
+    "claude-sonnet-4.6",
+    "do thing",
+    "high",
+    undefined,
+    undefined,
+    false,
+    tempDir,
+  );
+  expect(result.argv[0]).toBe("chat");
+  expect(result.argv).toContain("--no-interactive");
+  expect(result.argv).toContain("--trust-all-tools");
+  expect(result.argv).toContain("--model");
+  expect(result.argv).toContain("claude-sonnet-4.6");
+  expect(result.argv).toContain("--effort");
+  expect(result.argv).toContain("high");
+  // prompt is the last positional arg
+  expect(result.argv[result.argv.length - 1]).toBe("do thing");
+});
+
+test("buildCliArgs for kiro: instructions prepended, images appended as file list", () => {
+  const result = buildCliArgs(
+    "kiro-cli",
+    undefined,
+    "do thing",
+    undefined,
+    "be careful",
+    ["/tmp/a.png"],
+    false,
+    tempDir,
+  );
+  const prompt = result.argv[result.argv.length - 1]!;
+  expect(prompt).toContain("be careful");
+  expect(prompt).toContain("do thing");
+  expect(prompt).toContain("/tmp/a.png");
+  // no streaming flags — kiro has no stream-json mode
+  expect(result.argv).not.toContain("--format");
+  expect(result.argv).not.toContain("--output-format");
+});

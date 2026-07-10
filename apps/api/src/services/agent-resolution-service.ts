@@ -9,7 +9,7 @@ import {
   type ProviderConfigRecord,
 } from "./executor-config-service";
 
-type AgentRuntimeType = "ucm" | "codex" | "opencode" | "claude-code";
+type AgentRuntimeType = "ucm" | "codex" | "opencode" | "claude-code" | "kiro";
 
 export type ProviderConfig = { id: string } & ProviderConfigRecord;
 

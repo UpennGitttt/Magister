@@ -114,7 +114,7 @@ export function buildRuntimeEnv(input: RuntimeEnvInput): RuntimeEnvBuildResult {
   const strippedKeys = new Set<string>();
   const shouldIsolateHome =
     input.isolateHome ??
-    (input.runtimeSource !== "opencode" && input.runtimeSource !== "claude-code");
+    (input.runtimeSource !== "opencode" && input.runtimeSource !== "claude-code" && input.runtimeSource !== "kiro");
 
   for (const [key, value] of Object.entries(baseEnv)) {
     if (typeof value !== "string") continue;

@@ -190,7 +190,7 @@ const agentProfileSchema = z.object({
   status: z.string().trim().nullable().optional(),
   mcpConfig: z.string().trim().nullable().optional(),
   maxConcurrentTasks: z.number().int().positive().nullable().optional(),
-  runtimeType: z.enum(["ucm", "codex", "opencode", "claude-code"]).optional().nullable(),
+  runtimeType: z.enum(["ucm", "codex", "opencode", "claude-code", "kiro"]).optional().nullable(),
   provider: z.string().trim().nullable().optional(),
   commandPath: z.string().trim().nullable().optional(),
   customEnv: z.string().trim().nullable().optional(),
@@ -1493,7 +1493,7 @@ export async function registerSettingsRoutes(app: FastifyInstance) {
     }
 
     // Query params override DB values (so unsaved draft changes work)
-    const validRuntimes = ["ucm", "codex", "opencode", "claude-code"] as const;
+    const validRuntimes = ["ucm", "codex", "opencode", "claude-code", "kiro"] as const;
     const hasRuntimeOverride = validRuntimes.includes(query.runtimeType as any);
     const runtimeType = hasRuntimeOverride
       ? (query.runtimeType as typeof validRuntimes[number])
@@ -1509,6 +1509,7 @@ export async function registerSettingsRoutes(app: FastifyInstance) {
       codex: "codex",
       opencode: "opencode",
       "claude-code": "claude",
+      kiro: "kiro-cli",
     };
     const commandPath =
       query.commandPath?.trim() ||

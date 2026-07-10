@@ -1634,7 +1634,7 @@ export async function setAgentMcpServers(roleId: string, serverIds: string[]) {
 }
 
 // MCP Phase 4 — CLI bridge (visibility into skills + MCP across CLIs).
-export type CliRuntime = "codex" | "claude-code" | "opencode";
+export type CliRuntime = "codex" | "claude-code" | "opencode" | "kiro";
 
 export type SkillStatus =
   | { kind: "magister-pool" }
@@ -1729,7 +1729,7 @@ export async function getActiveTeammates(taskId: string): Promise<{ active: Acti
 // external coding-agent CLIs (codex / claude-code / opencode), shown
 // in Settings → Setup. See backend cli-agent-status-service.ts.
 export type CliAgentStatus = {
-  cli: "codex" | "claude-code" | "opencode";
+  cli: CliRuntime;
   label: string;
   installed: boolean;
   version: string | null;

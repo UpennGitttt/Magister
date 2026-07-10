@@ -1513,7 +1513,7 @@ Complete the delegated goal in the workspace and report concise results when fin
 Complete the delegated goal in the workspace and report concise results when finished.`;
 }
 
-type AgentRuntimeType = "ucm" | "codex" | "opencode" | "claude-code";
+type AgentRuntimeType = "ucm" | "codex" | "opencode" | "claude-code" | "kiro";
 
 function normalizeRuntimeType(value: string | null | undefined): AgentRuntimeType | "unknown" {
   if (typeof value !== "string" || value.trim().length === 0) {
@@ -1521,7 +1521,7 @@ function normalizeRuntimeType(value: string | null | undefined): AgentRuntimeTyp
   }
 
   const trimmed = value.trim();
-  if (trimmed === "ucm" || trimmed === "codex" || trimmed === "opencode" || trimmed === "claude-code") {
+  if (trimmed === "ucm" || trimmed === "codex" || trimmed === "opencode" || trimmed === "claude-code" || trimmed === "kiro") {
     return trimmed;
   }
 
@@ -1534,6 +1534,9 @@ function getDefaultCliCommand(runtimeType: Exclude<AgentRuntimeType, "ucm">): st
   }
   if (runtimeType === "opencode") {
     return "opencode";
+  }
+  if (runtimeType === "kiro") {
+    return "kiro-cli";
   }
   return "claude";
 }
