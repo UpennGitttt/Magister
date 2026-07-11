@@ -21,8 +21,9 @@ import { WorkspaceList } from "../components/settings/WorkspaceList";
 import { DiagnosticsPanel } from "../components/settings/DiagnosticsPanel";
 import { ApprovalRulesTable } from "../components/settings/ApprovalRulesTable";
 import { OnboardingWizard } from "../components/settings/OnboardingWizard";
+import { ScheduleList } from "../components/settings/ScheduleList";
 
-type Tab = "setup" | "providers" | "models" | "bindings" | "agents" | "roles" | "skills" | "mcp" | "memory" | "workspaces" | "approval-rules" | "diagnostics";
+type Tab = "setup" | "providers" | "models" | "bindings" | "agents" | "roles" | "skills" | "mcp" | "memory" | "workspaces" | "schedules" | "approval-rules" | "diagnostics";
 
 // The configuration model is **agent → model → provider** — a Role
 // gets a row in `agent_profiles` that names a model and a provider
@@ -62,6 +63,9 @@ const TABS: Array<{ id: Tab; label: string }> = [
   // (M5 Phase 1). Writes happen via the leader's upsert_memory tool so
   // every change shows up in the runtime trace.
   { id: "memory", label: "Memory" },
+  // Schedules — user-configurable recurring tasks (cron). Each trigger
+  // spawns a normal task through processTaskIntent.
+  { id: "schedules", label: "Schedules" },
   // Approval Rules — persistent rules from the bash sandbox
   // escalation protocol (spec §1). New in V1.1.
   { id: "approval-rules", label: "Approval Rules" },
@@ -183,6 +187,7 @@ export function SettingsPage({ defaultTab }: { defaultTab?: Tab } = {}) {
           {activeTab === "mcp" && <McpServerList />}
           {activeTab === "memory" && <MemoryList />}
           {activeTab === "workspaces" && <WorkspaceList />}
+          {activeTab === "schedules" && <ScheduleList />}
           {activeTab === "approval-rules" && <ApprovalRulesTable />}
           {activeTab === "diagnostics" && <DiagnosticsPanel />}
         </section>

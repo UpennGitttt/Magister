@@ -17,6 +17,7 @@ import { initMemoryRuntime } from "./services/memory/memory-runtime";
 import { materializePendingChangeReviewDrafts } from "./services/safe-apply/change-review-state-service";
 import { startRuntimeRecoveryLoop, stopRuntimeRecoveryLoop } from "./services/runtime-recovery-service";
 import { startRuntimeWorkspaceCleanupLoop, stopRuntimeWorkspaceCleanupLoop } from "./services/runtime-workspace-service";
+import { startScheduledTaskLoop, stopScheduledTaskLoop } from "./services/scheduled-task-service";
 import { startTaskRetentionLoop, stopTaskRetentionLoop } from "./services/task-retention-service";
 import { acquireProcessLock } from "./utils/process-lock";
 import { runGracefulShutdown } from "./utils/graceful-shutdown";
@@ -183,6 +184,7 @@ app.addHook("onClose", async () => {
   await stopRuntimeRecoveryLoop();
   await stopRuntimeWorkspaceCleanupLoop();
   await stopTaskRetentionLoop();
+  await stopScheduledTaskLoop();
   await stopFeishuWebSocketGateway();
   await lock.release();
 });
@@ -227,6 +229,7 @@ await startRuntimeRecoveryLoop();
 await startArtifactRetentionLoop();
 await startRuntimeWorkspaceCleanupLoop();
 await startTaskRetentionLoop();
+await startScheduledTaskLoop();
 
 // Feishu outbound — registers approval lifecycle hooks so creating
 // a dangerous-command approval also pushes a card to the bound
