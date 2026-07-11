@@ -71,7 +71,7 @@ import {
 
 type ProcessTaskIntentInput = {
   prompt: string;
-  source: "cli" | "web" | "feishu";
+  source: "cli" | "web" | "feishu" | "slack";
   workspaceId: string;
   channelBindingId?: string;
   rootChannelBindingId?: string;
@@ -1173,8 +1173,12 @@ export async function processTaskIntent(
   const now = new Date();
   const requestId = generateRequestId();
 
-  // Feishu source stays synchronous — its reply delivery depends on finalAnswer
-  const isSyncSource = input.source === "feishu";
+  // Channel sources stay synchronous — their reply delivery depends on
+  // finalAnswer (Feishu text fallback / Slack thread reply). The channel
+  // gateway acks the platform BEFORE calling processChannelEvent, so
+  // waiting here doesn't violate platform ack deadlines.
+  const isSyncSource = input.source === "feishu" || input.source === "slack";
+  const bindingChannel: "feishu" | "slack" = input.source === "slack" ? "slack" : "feishu";
   let previousConversationContext: string | undefined;
 
   // 1. Check for active session to resume
@@ -1182,14 +1186,14 @@ export async function processTaskIntent(
     const previousSessionSnapshot = await sessionService.getByBindingId(input.channelBindingId);
     await sessionService.ensureForBinding({
       bindingId: input.channelBindingId,
-      channel: "feishu",
+      channel: bindingChannel,
       workspaceId: input.workspaceId,
     });
     const activeSession = await sessionService.getActiveLeaderSession(input.channelBindingId);
     if (activeSession) {
       const runId = activeSession.sessionId;
       const sessionExpired =
-        input.source === "feishu"
+        input.source === "feishu" || input.source === "slack"
           ? isFeishuSessionExpired(previousSessionSnapshot?.updatedAt, now)
           : false;
 
@@ -1470,7 +1474,7 @@ export async function processTaskIntent(
   if (input.channelBindingId) {
     await sessionService.ensureForBinding({
       bindingId: input.channelBindingId,
-      channel: "feishu",
+      channel: bindingChannel,
       workspaceId: input.workspaceId,
       currentTaskId: taskId,
     });

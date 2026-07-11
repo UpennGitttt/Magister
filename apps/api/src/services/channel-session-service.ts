@@ -1,5 +1,6 @@
 import type { ChannelSessionSelect } from "@magister/db";
 
+import type { InboundChannel } from "../integrations/feishu/feishu-event-normalizer";
 import { ChannelSessionRepository } from "../repositories/channel-session-repository";
 
 export type ChannelSessionContinuityMode =
@@ -17,7 +18,7 @@ export type ChannelSessionVerboseLevel = "off" | "on" | "full" | "low" | "high";
 
 type EnsureChannelSessionInput = {
   bindingId: string;
-  channel: "feishu";
+  channel: InboundChannel;
   workspaceId: string;
   continuityMode?: ChannelSessionContinuityMode;
   verboseLevel?: ChannelSessionVerboseLevel;
@@ -144,7 +145,7 @@ export class ChannelSessionService {
 
   async recordInboundMessage(input: {
     bindingId: string;
-    channel: "feishu";
+    channel: InboundChannel;
     workspaceId: string;
     latestInboundMessageId: string;
     currentTaskId?: string | null;
@@ -160,7 +161,7 @@ export class ChannelSessionService {
 
   async recordTaskLink(input: {
     bindingId: string;
-    channel: "feishu";
+    channel: InboundChannel;
     workspaceId: string;
     currentTaskId: string;
   }) {
@@ -174,7 +175,7 @@ export class ChannelSessionService {
 
   async recordOutboundDelivery(input: {
     bindingId: string;
-    channel: "feishu";
+    channel: InboundChannel;
     workspaceId: string;
     latestDeliveredMessageId: string;
     latestAnswerSummary?: string | null;
