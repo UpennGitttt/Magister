@@ -182,6 +182,23 @@ test("resolveAgentConfig coerces leader runtime to Magister", async () => {
   expect(resolved?.commandPath).toBeUndefined();
 });
 
+test("resolveAgentConfig keeps claude-code runtime for leader", async () => {
+  writeExecutorConfig({ providers: {} });
+  await seedAgentProfile({
+    roleId: "leader",
+    runtimeType: "claude-code",
+    modelName: "claude-sonnet-5",
+    commandPath: "/usr/local/bin/claude",
+  });
+
+  const resolved = await resolveAgentConfig("leader");
+  expect(resolved).not.toBeNull();
+  expect(resolved?.runtimeType).toBe("claude-code");
+  expect(resolved?.modelName).toBe("claude-sonnet-5");
+  expect(resolved?.commandPath).toBe("/usr/local/bin/claude");
+  expect(resolved?.provider).toBeUndefined();
+});
+
 test("resolveAgentConfig returns null for missing agent", async () => {
   writeExecutorConfig({ providers: {} });
   await expect(resolveAgentConfig("missing-agent")).resolves.toBeNull();

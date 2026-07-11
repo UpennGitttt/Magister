@@ -397,16 +397,24 @@ function AgentFormFields({
           className="config-input"
           value={runtimeType}
           onChange={(e) => onChange("runtimeType", normalizeRuntimeType(e.target.value))}
-          disabled={disabled || draft.roleId === "leader"}
+          disabled={disabled}
         >
           {RUNTIME_TYPE_OPTIONS.filter((opt) =>
-            draft.roleId === "leader" ? opt.value === "ucm" : true,
+            draft.roleId === "leader"
+              ? opt.value === "ucm" || opt.value === "claude-code"
+              : true,
           ).map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
+        {draft.roleId === "leader" ? (
+          <p className="config-field-hint">
+            Leader supports Magister Built-in (API provider) or Claude Code (local CLI login —
+            no API key needed). Other CLI runtimes are one-shot and cannot drive the leader loop.
+          </p>
+        ) : null}
       </div>
       </section>
 
