@@ -84,18 +84,21 @@ const RUNTIME_TYPE_OPTIONS: Array<{ value: RuntimeType; label: string }> = [
   { value: "codex", label: "Codex CLI" },
   { value: "opencode", label: "OpenCode CLI" },
   { value: "claude-code", label: "Claude Code" },
+  { value: "kiro", label: "Kiro CLI" },
 ];
 
 const DEFAULT_CLI_COMMAND_PATHS: Partial<Record<RuntimeType, string>> = {
   codex: "codex",
   opencode: "opencode",
   "claude-code": "claude",
+  kiro: "kiro-cli",
 };
 
 const LEGACY_LINUX_CLI_COMMAND_PATHS: Partial<Record<RuntimeType, string>> = {
   codex: "/usr/bin/codex",
   opencode: "/usr/bin/opencode",
   "claude-code": "/usr/bin/claude",
+  kiro: "/usr/bin/kiro-cli",
 };
 
 const REASONING_MODE_OPTIONS: Array<NonNullable<AgentDraft["reasoningMode"]>> = ["off", "auto", "on"];
@@ -108,7 +111,7 @@ const REASONING_EFFORT_OPTIONS: Array<{ value: Exclude<AgentDraft["reasoningEffo
 ];
 
 function normalizeRuntimeType(value: string | null | undefined): RuntimeType {
-  if (value === "codex" || value === "opencode" || value === "claude-code") {
+  if (value === "codex" || value === "opencode" || value === "claude-code" || value === "kiro") {
     return value;
   }
   return "ucm";
@@ -394,16 +397,24 @@ function AgentFormFields({
           className="config-input"
           value={runtimeType}
           onChange={(e) => onChange("runtimeType", normalizeRuntimeType(e.target.value))}
-          disabled={disabled || draft.roleId === "leader"}
+          disabled={disabled}
         >
           {RUNTIME_TYPE_OPTIONS.filter((opt) =>
-            draft.roleId === "leader" ? opt.value === "ucm" : true,
+            draft.roleId === "leader"
+              ? opt.value === "ucm" || opt.value === "claude-code"
+              : true,
           ).map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
+        {draft.roleId === "leader" ? (
+          <p className="config-field-hint">
+            Leader supports Magister Built-in (API provider) or Claude Code (local CLI login —
+            no API key needed). Other CLI runtimes are one-shot and cannot drive the leader loop.
+          </p>
+        ) : null}
       </div>
       </section>
 

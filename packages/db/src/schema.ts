@@ -822,3 +822,34 @@ export const commandApprovalRules = sqliteTable("command_approval_rules", {
 
 export type CommandApprovalRuleInsert = typeof commandApprovalRules.$inferInsert;
 export type CommandApprovalRuleSelect = typeof commandApprovalRules.$inferSelect;
+
+// User-configurable recurring task schedules (cron). The scheduler loop
+// (apps/api/src/services/scheduled-task-service.ts) scans rows with
+// enabled=1 AND next_run_at <= now every tick and fires each one through
+// processTaskIntent() — the spawned task is a normal task (Board, events,
+// trace, token accounting all apply). next_run_at is persisted so due
+// schedules survive API restarts; a schedule that came due while the
+// server was down fires once on the next tick, not N times.
+export const scheduledTasks = sqliteTable("scheduled_tasks", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  // Standard 5-field cron expression (minute hour day month weekday),
+  // evaluated in server-local time. Validated with croner at write time.
+  cronExpr: text("cron_expr").notNull(),
+  prompt: text("prompt").notNull(),
+  // NULL = resolve the default workspace at trigger time (same fallback
+  // as POST /tasks).
+  workspaceId: text("workspace_id"),
+  enabled: integer("enabled").notNull().default(1),
+  lastRunAt: integer("last_run_at", { mode: "timestamp_ms" }),
+  // Task spawned by the most recent trigger — used both for UI linking
+  // and for the overlap guard (skip firing while it's still running).
+  lastTaskId: text("last_task_id"),
+  lastError: text("last_error"),
+  nextRunAt: integer("next_run_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export type ScheduledTaskInsert = typeof scheduledTasks.$inferInsert;
+export type ScheduledTaskSelect = typeof scheduledTasks.$inferSelect;

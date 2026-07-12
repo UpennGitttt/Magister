@@ -61,7 +61,7 @@ const attachmentSchema = z.object({
 
 const createTaskSchema = z.object({
   prompt: z.string().min(1),
-  source: z.enum(["cli", "web", "feishu"]),
+  source: z.enum(["cli", "web", "feishu", "slack"]),
   workspaceId: z.string().min(1),
   rootChannelBindingId: z.string().min(1).optional(),
   createdBy: z.string().min(1).optional(),

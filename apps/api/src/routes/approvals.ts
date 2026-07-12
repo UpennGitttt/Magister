@@ -17,7 +17,7 @@ import { validatePrefixRule } from "../services/safe-apply/command-rule-matcher"
 
 const approvalActionSchema = z.object({
   actorId: z.string().min(1).optional(),
-  source: z.enum(["web", "feishu", "cli"]),
+  source: z.enum(["web", "feishu", "cli", "slack"]),
   comment: z.string().min(1).optional(),
 });
 

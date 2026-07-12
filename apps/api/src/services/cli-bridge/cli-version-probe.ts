@@ -21,7 +21,7 @@ export type CliVersionEntry = {
   error?: string;
 };
 
-const CLIS: CliRuntime[] = ["codex", "claude-code", "opencode"];
+const CLIS: CliRuntime[] = ["codex", "claude-code", "opencode", "kiro"];
 async function runVersion(cli: CliRuntime): Promise<CliVersionEntry> {
   try {
     const resolved = await resolveCliExecutable(cli);

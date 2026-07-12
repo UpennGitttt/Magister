@@ -43,6 +43,8 @@ export async function detectMcpDrift(): Promise<DriftEntry[]> {
     codex: codexScan,
     "claude-code": claudeScan,
     opencode: opencodeScan,
+    // ponytail: kiro has no MCP scanner yet (see cli-bridge/index.ts)
+    kiro: [],
   };
 
   const drift: DriftEntry[] = [];

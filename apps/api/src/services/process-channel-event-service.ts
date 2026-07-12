@@ -1,5 +1,9 @@
 import { LocalObservabilityAdapter } from "../observability/local-observability-adapter";
-import { stripBotMention, type InboundChannelEvent } from "../integrations/feishu/feishu-event-normalizer";
+import {
+  stripBotMention,
+  type InboundChannel,
+  type InboundChannelEvent,
+} from "../integrations/feishu/feishu-event-normalizer";
 import { createFeishuClient } from "../integrations/feishu/feishu-client";
 import { parseFeishuConfigFromEnv } from "../integrations/feishu/feishu-config";
 import { getMagisterEnv } from "../lib/env";
@@ -13,12 +17,13 @@ import {
 } from "./channel-session-service";
 import { resolveFeishuApprovalCallback } from "./feishu-approval-callback-service";
 import { deliverLeaderAnswerToFeishu } from "./deliver-feishu-reply-service";
+import { deliverLeaderAnswerToSlack } from "./deliver-slack-reply-service";
 
 type ChannelBindingStatus = "created" | "resolved" | "duplicate";
 
 type ChannelBindingAcceptance = {
   id: string;
-  channel: "feishu";
+  channel: InboundChannel;
   accountId: string;
   chatId: string;
   workspaceId: string;
@@ -38,7 +43,7 @@ type ChannelIntakeAcceptance =
       latestExecutorId?: string | null;
       latestRunState?: string;
       workspaceId: string;
-      source: "feishu";
+      source: InboundChannel;
       title: string;
       finalAnswer?: string;
     }
@@ -413,7 +418,9 @@ async function intakeChannelEventAsTask(
   // Slash commands (/ws, /verbose, /help) intercept BEFORE task
   // creation. The handler sends its own reply card; returning
   // `task_resumed: false` here keeps the dedup table consistent.
-  if (text.startsWith("/")) {
+  // Feishu-only: Slack intercepts slash commands platform-side, so
+  // they never reach the bot as message events.
+  if (normalizedEvent.channel === "feishu" && text.startsWith("/")) {
     const { tryHandleSlashCommand } = await import("./feishu-channel-command-service");
     const slashResult = await tryHandleSlashCommand({
       text,
@@ -437,7 +444,7 @@ async function intakeChannelEventAsTask(
 
   const result = await processTaskIntent({
     prompt: text,
-    source: "feishu",
+    source: normalizedEvent.channel,
     workspaceId: binding.workspaceId,
     channelBindingId: binding.id,
     rootChannelBindingId: binding.id,
@@ -453,7 +460,7 @@ async function intakeChannelEventAsTask(
     latestExecutorId: null,
     latestRunState: result.status === "completed" ? "COMPLETED" : "RUNNING",
     workspaceId: binding.workspaceId,
-    source: "feishu",
+    source: normalizedEvent.channel,
     title: text,
     ...(result.finalAnswer !== undefined ? { finalAnswer: result.finalAnswer } : {}),
   };
@@ -589,12 +596,18 @@ export async function processChannelEvent(normalizedEvent: InboundChannelEvent) 
     if (normalizedEvent.platformMessageId) {
       await channelSessionService.recordInboundMessage({
         bindingId: binding.id,
-        channel: "feishu",
+        channel: normalizedEvent.channel,
         workspaceId: binding.workspaceId,
         latestInboundMessageId: normalizedEvent.platformMessageId,
       });
     }
-    const verboseCommand = parseFeishuVerboseCommand(inboundMessageText);
+    // Feishu-only: the reply path (recordFeishuCommandReply) has no
+    // Slack counterpart yet — intercepting here for Slack would mutate
+    // the verbose level with zero user feedback.
+    const verboseCommand =
+      normalizedEvent.channel === "feishu"
+        ? parseFeishuVerboseCommand(inboundMessageText)
+        : null;
     if (verboseCommand) {
       const currentSession = await channelSessionService.getByBindingId(binding.id);
       const currentVerboseLevel = channelSessionService.resolveVerboseLevel(currentSession);
@@ -668,13 +681,33 @@ export async function processChannelEvent(normalizedEvent: InboundChannelEvent) 
       if (intake.action === "task_created" || intake.action === "task_resumed") {
         await channelSessionService.recordTaskLink({
           bindingId: binding.id,
-          channel: "feishu",
+          channel: normalizedEvent.channel,
           workspaceId: binding.workspaceId,
           currentTaskId: intake.taskId,
         });
 
+        // Slack v1 has no streaming card — the sync finalAnswer reply
+        // below IS the acknowledgement, posted as a thread reply to
+        // the triggering message.
+        if (
+          normalizedEvent.channel === "slack"
+          && intake.taskState === "COMPLETED"
+          && intake.finalAnswer
+        ) {
+          await deliverLeaderAnswerToSlack({
+            bindingId: binding.id,
+            workspaceId: binding.workspaceId,
+            taskId: intake.taskId,
+            answer: intake.finalAnswer,
+            chatId: normalizedEvent.chatId,
+            ...(normalizedEvent.platformMessageId
+              ? { replyToMessageTs: normalizedEvent.platformMessageId }
+              : {}),
+          });
+        }
+
         // For queued tasks, processTaskExecution delivers when work completes.
-        if (intake.taskState === "COMPLETED" && intake.finalAnswer) {
+        if (normalizedEvent.channel === "feishu" && intake.taskState === "COMPLETED" && intake.finalAnswer) {
           // Skip the notification card ONLY when a streaming session
           // actually ran for this task — the streaming card already
           // carries the full answer. If verbose=high but no streaming

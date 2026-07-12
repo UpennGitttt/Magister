@@ -24,8 +24,8 @@ import { probeCliVersions } from "./cli-bridge/cli-version-probe";
 import type { CliRuntime } from "./cli-bridge/types";
 
 export type CliAgentStatus = {
-  cli: "codex" | "claude-code" | "opencode";
-  label: string; // "Codex" / "Claude Code" / "OpenCode"
+  cli: CliRuntime;
+  label: string; // "Codex" / "Claude Code" / "OpenCode" / "Kiro"
   installed: boolean;
   version: string | null;
   authenticated: boolean;
@@ -71,9 +71,20 @@ const CLI_META: Record<CliRuntime, CliMeta> = {
     loginHint: "opencode auth login",
     authPath: () => join(resolveHome(), ".local/share/opencode/auth.json"),
   },
+  kiro: {
+    label: "Kiro",
+    installHint: "https://kiro.dev (install kiro-cli)",
+    loginHint: "kiro-cli login",
+    // kiro-cli keeps auth + session state in its data dir sqlite store
+    // (macOS: ~/Library/Application Support/kiro-cli, Linux: XDG data dir).
+    authPath: () =>
+      process.platform === "darwin"
+        ? join(resolveHome(), "Library", "Application Support", "kiro-cli", "data.sqlite3")
+        : join(process.env.XDG_DATA_HOME || join(resolveHome(), ".local", "share"), "kiro-cli", "data.sqlite3"),
+  },
 };
 
-const CLI_ORDER: CliRuntime[] = ["codex", "claude-code", "opencode"];
+const CLI_ORDER: CliRuntime[] = ["codex", "claude-code", "opencode", "kiro"];
 
 /**
  * An auth file with <= 2 bytes is effectively empty (e.g. `{}` or a

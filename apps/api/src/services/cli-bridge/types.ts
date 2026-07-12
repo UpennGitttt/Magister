@@ -1,4 +1,4 @@
-export type CliRuntime = "codex" | "claude-code" | "opencode";
+export type CliRuntime = "codex" | "claude-code" | "opencode" | "kiro";
 
 export type ExternalMcpServer = {
   name: string;

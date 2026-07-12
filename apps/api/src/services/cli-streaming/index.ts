@@ -54,6 +54,9 @@ export const CLI_PARSER_MIN_VERSION: Record<Exclude<AgentRuntimeType, "ucm">, st
   // tool events are best-effort. Set a min version so it activates;
   // real-world use will surface schema gaps fast and we tighten then.
   "opencode": "1.14.39",
+  // kiro-cli chat has no machine-readable stream format — null keeps
+  // streaming permanently off; kiro runs black-box (accumulated stdout).
+  "kiro": null,
 };
 
 function isClaudeStreamingExplicitlyDisabled(): boolean {

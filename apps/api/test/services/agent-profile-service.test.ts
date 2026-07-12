@@ -67,6 +67,22 @@ test("leader profile runtimeType is coerced to ucm", async () => {
   expect(profile?.runtimeType).toBe("ucm");
 });
 
+test("leader profile accepts runtimeType=claude-code", async () => {
+  const { upsertAgentProfile, getAgentProfile } = await import("../../src/services/agent-profile-service");
+
+  await upsertAgentProfile({
+    roleId: "leader",
+    label: "Leader",
+    runtimeType: "claude-code",
+    commandPath: "/usr/local/bin/claude",
+  });
+
+  const profile = await getAgentProfile("leader");
+  expect(profile).not.toBeNull();
+  expect(profile?.runtimeType).toBe("claude-code");
+  expect(profile?.commandPath).toBe("/usr/local/bin/claude");
+});
+
 test("get agent with runtimeType=codex returns full config", async () => {
   const { upsertAgentProfile, getAgentProfile } = await import("../../src/services/agent-profile-service");
 

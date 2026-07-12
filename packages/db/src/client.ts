@@ -829,6 +829,31 @@ function ensureChannelEventStateTables(sqlite: RawSqlite) {
   ensureSkillsAndAgentTables(sqlite);
   ensureMemoryProvenanceTable(sqlite);
   ensureCommandApprovalRulesTable(sqlite);
+  ensureScheduledTasksTable(sqlite);
+}
+
+// User-configurable recurring task schedules. See `scheduledTasks` in
+// schema.ts and `apps/api/src/services/scheduled-task-service.ts`.
+function ensureScheduledTasksTable(sqlite: RawSqlite) {
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS scheduled_tasks (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      cron_expr TEXT NOT NULL,
+      prompt TEXT NOT NULL,
+      workspace_id TEXT,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      last_run_at INTEGER,
+      last_task_id TEXT,
+      last_error TEXT,
+      next_run_at INTEGER,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_due
+      ON scheduled_tasks(enabled, next_run_at)
+      WHERE enabled = 1;
+  `);
 }
 
 // Spec §1 — persistent rule store for the sandbox

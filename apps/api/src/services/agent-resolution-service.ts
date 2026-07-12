@@ -9,7 +9,7 @@ import {
   type ProviderConfigRecord,
 } from "./executor-config-service";
 
-type AgentRuntimeType = "ucm" | "codex" | "opencode" | "claude-code";
+type AgentRuntimeType = "ucm" | "codex" | "opencode" | "claude-code" | "kiro";
 
 export type ProviderConfig = { id: string } & ProviderConfigRecord;
 
@@ -42,14 +42,28 @@ export type ResolvedAgentConfig = {
 };
 
 function normalizeRuntimeType(value: string | null | undefined): AgentRuntimeType {
-  if (value === "ucm" || value === "codex" || value === "opencode" || value === "claude-code") {
+  if (value === "ucm" || value === "codex" || value === "opencode" || value === "claude-code" || value === "kiro") {
     return value;
   }
   return "ucm";
 }
 
-function mustUseUcmRuntime(roleId: string): boolean {
-  return roleId === "leader" || roleId === "manager";
+/**
+ * The leader runs a continuous model→tool_use→observation loop, so its
+ * runtime must either be the native API loop ("ucm") or a runtime that
+ * can drive that loop itself with Magister tools injected — today only
+ * "claude-code" (via the Agent SDK; see claude-code-leader-runtime.ts).
+ * One-shot CLI bridges (codex/opencode/kiro) can't lead and coerce to ucm.
+ */
+function isLeaderCapableRuntime(runtimeType: AgentRuntimeType): boolean {
+  return runtimeType === "ucm" || runtimeType === "claude-code";
+}
+
+function coerceLeaderRuntimeType(roleId: string, runtimeType: AgentRuntimeType): AgentRuntimeType {
+  if (roleId !== "leader" && roleId !== "manager") {
+    return runtimeType;
+  }
+  return isLeaderCapableRuntime(runtimeType) ? runtimeType : "ucm";
 }
 
 function toNonEmpty(value: string | null | undefined): string | null {
@@ -153,7 +167,7 @@ export async function resolveAgentConfig(agentId: string): Promise<ResolvedAgent
     return null;
   }
 
-  const runtimeType = mustUseUcmRuntime(agent.roleId) ? "ucm" : normalizeRuntimeType(agent.runtimeType);
+  const runtimeType = coerceLeaderRuntimeType(agent.roleId, normalizeRuntimeType(agent.runtimeType));
   let modelName = toNonEmpty(agent.modelName) ?? toNonEmpty(agent.modelOverride) ?? "";
 
   if (runtimeType !== "ucm") {
@@ -383,14 +397,14 @@ export async function resolveAgentForRole(roleId: string): Promise<ResolvedAgent
   const candidateRoleIds = normalizedRoleId === "leader" || normalizedRoleId === "manager"
     ? ["leader", "manager"]
     : [normalizedRoleId];
-  const enforceUcmRuntime = normalizedRoleId === "leader" || normalizedRoleId === "manager";
+  const enforceLeaderRuntime = normalizedRoleId === "leader" || normalizedRoleId === "manager";
   for (const candidate of candidateRoleIds) {
     const mappedAgentId = toNonEmpty(roleMapping[candidate]);
     if (mappedAgentId) {
       const resolved = await resolveAgentConfig(mappedAgentId);
-      if (resolved && enforceUcmRuntime && resolved.runtimeType !== "ucm") {
+      if (resolved && enforceLeaderRuntime && !isLeaderCapableRuntime(resolved.runtimeType)) {
         console.warn(
-          `[agent-resolution] Ignoring non-Magister runtime "${resolved.runtimeType}" for leader role mapping "${candidate}" -> "${mappedAgentId}"`,
+          `[agent-resolution] Ignoring leader-incapable runtime "${resolved.runtimeType}" for leader role mapping "${candidate}" -> "${mappedAgentId}"`,
         );
         continue;
       }

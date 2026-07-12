@@ -47,11 +47,13 @@ import type {
  *   codex     `-i <file> --sandbox workspace-write <prompt>` reads images
  *   opencode  `run <prompt> -f <file>` (prompt FIRST)    reads files
  *   claude    `--permission-mode auto -p <prompt-with-file-paths>` uses Read tool
+ *   kiro-cli  `chat --no-interactive --trust-all-tools <prompt-with-file-paths>` reads files
  */
-export const CLI_ARGS_BASELINE_VERSIONS: Record<"codex" | "claude-code" | "opencode", string> = {
+export const CLI_ARGS_BASELINE_VERSIONS: Record<"codex" | "claude-code" | "opencode" | "kiro", string> = {
   "codex": "codex-cli 0.128",
   "claude-code": "2.1.",
   "opencode": "1.14",
+  "kiro": "2.12",
 };
 
 export type CliSpawnResult = {
@@ -300,6 +302,34 @@ export function buildCliArgs(
     return buildCliArgvResult(args, runtimeSource);
   }
 
+  if (commandName === "kiro-cli" || commandName === "kiro") {
+    // kiro-cli 2.12: `chat --no-interactive` runs headless; `--trust-all-tools`
+    // auto-approves tool use (mirrors codex approval_policy="never" /
+    // claude --permission-mode auto). Safe Apply still gates the
+    // resulting diff for human review, same as the other CLIs.
+    const args: string[] = ["chat", "--no-interactive", "--trust-all-tools"];
+    if (model) {
+      args.push("--model", model);
+    }
+    // kiro-cli --effort accepts low|medium|high|xhigh (matches Magister's
+    // reasoningEffort vocabulary directly).
+    const effort = reasoningEffort?.trim().toLowerCase();
+    if (effort === "low" || effort === "medium" || effort === "high" || effort === "xhigh") {
+      args.push("--effort", effort);
+    }
+    // No dedicated system-prompt or image flag — instructions are
+    // prepended to the prompt (effectivePrompt), and image paths are
+    // appended as a file list for the agent's fs_read tool.
+    // ponytail: no stream-json branch — kiro chat has no machine-readable
+    // stream format; runs black-box (stdout accumulated), like any
+    // unparsed CLI. Add a parser in cli-streaming/ if kiro ships one.
+    const kiroPrompt = images.length > 0
+      ? `${effectivePrompt}\n\nFiles attached for this turn (read them with your file-read tool):\n${images.map((p) => `- ${p}`).join("\n")}`
+      : effectivePrompt;
+    args.push(kiroPrompt);
+    return buildCliArgvResult(args, runtimeSource);
+  }
+
   return buildCliArgvResult([prompt], runtimeSource);
 }
 
@@ -353,15 +383,16 @@ function runtimeSourceFromCommandName(commandName: string): RuntimeSource {
   if (commandName === "codex") return "codex";
   if (commandName === "claude") return "claude-code";
   if (commandName === "opencode") return "opencode";
+  if (commandName === "kiro-cli" || commandName === "kiro") return "kiro";
   return "unknown";
 }
 
 function isCliRuntime(value: AgentRuntimeType | undefined): value is CliRuntime {
-  return value === "codex" || value === "opencode" || value === "claude-code";
+  return value === "codex" || value === "opencode" || value === "claude-code" || value === "kiro";
 }
 
 function runtimeSourceFromRuntimeType(runtimeType: AgentRuntimeType | CliResumableRuntime | undefined): RuntimeSource {
-  if (runtimeType === "ucm" || runtimeType === "codex" || runtimeType === "opencode" || runtimeType === "claude-code") {
+  if (runtimeType === "ucm" || runtimeType === "codex" || runtimeType === "opencode" || runtimeType === "claude-code" || runtimeType === "kiro") {
     return runtimeType;
   }
   return "unknown";

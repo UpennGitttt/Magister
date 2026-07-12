@@ -10,6 +10,7 @@ export type RuntimeSource =
   | "codex"
   | "claude-code"
   | "opencode"
+  | "kiro"
   | "unknown";
 
 export type RuntimeWorkspaceStrategy =

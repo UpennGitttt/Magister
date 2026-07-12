@@ -53,7 +53,7 @@ export async function resolveApproval(input: {
   approvalId: string;
   resolution: "approved" | "rejected";
   actorId?: string;
-  source: "web" | "feishu" | "cli";
+  source: "web" | "feishu" | "cli" | "slack";
   comment?: string;
 }) {
   const approvalRepository = new ApprovalRepository();

@@ -27,6 +27,8 @@ import { registerTraceRoutes } from "./routes/traces";
 import { registerApprovalRuleRoutes } from "./routes/approval-rules";
 import { registerCliAgentRoutes } from "./routes/cli-agents";
 import { registerOnboardingRoutes } from "./routes/onboarding";
+import { registerScheduleRoutes } from "./routes/schedules";
+import { registerSlackRoutes } from "./routes/slack";
 
 // Fastify's default bodyLimit is 1 MB — far below what the attachment
 // service permits (10 files × 10 MiB each, +33% base64 overhead +
@@ -45,6 +47,7 @@ export function buildApp() {
   app.register(registerWebSocketRoutes);
   app.register(registerHealthRoutes);
   app.register(registerFeishuRoutes);
+  app.register(registerSlackRoutes);
   app.register(registerChannelEventRoutes);
   app.register(registerChannelCallbackRoutes);
   app.register(registerTaskRoutes);
@@ -68,6 +71,7 @@ export function buildApp() {
   app.register(registerApprovalRuleRoutes);
   app.register(registerCliAgentRoutes);
   app.register(registerOnboardingRoutes);
+  app.register(registerScheduleRoutes);
 
   return app;
 }

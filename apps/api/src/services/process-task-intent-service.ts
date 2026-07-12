@@ -71,7 +71,7 @@ import {
 
 type ProcessTaskIntentInput = {
   prompt: string;
-  source: "cli" | "web" | "feishu";
+  source: "cli" | "web" | "feishu" | "slack";
   workspaceId: string;
   channelBindingId?: string;
   rootChannelBindingId?: string;
@@ -1173,8 +1173,12 @@ export async function processTaskIntent(
   const now = new Date();
   const requestId = generateRequestId();
 
-  // Feishu source stays synchronous — its reply delivery depends on finalAnswer
-  const isSyncSource = input.source === "feishu";
+  // Channel sources stay synchronous — their reply delivery depends on
+  // finalAnswer (Feishu text fallback / Slack thread reply). The channel
+  // gateway acks the platform BEFORE calling processChannelEvent, so
+  // waiting here doesn't violate platform ack deadlines.
+  const isSyncSource = input.source === "feishu" || input.source === "slack";
+  const bindingChannel: "feishu" | "slack" = input.source === "slack" ? "slack" : "feishu";
   let previousConversationContext: string | undefined;
 
   // 1. Check for active session to resume
@@ -1182,14 +1186,14 @@ export async function processTaskIntent(
     const previousSessionSnapshot = await sessionService.getByBindingId(input.channelBindingId);
     await sessionService.ensureForBinding({
       bindingId: input.channelBindingId,
-      channel: "feishu",
+      channel: bindingChannel,
       workspaceId: input.workspaceId,
     });
     const activeSession = await sessionService.getActiveLeaderSession(input.channelBindingId);
     if (activeSession) {
       const runId = activeSession.sessionId;
       const sessionExpired =
-        input.source === "feishu"
+        input.source === "feishu" || input.source === "slack"
           ? isFeishuSessionExpired(previousSessionSnapshot?.updatedAt, now)
           : false;
 
@@ -1470,7 +1474,7 @@ export async function processTaskIntent(
   if (input.channelBindingId) {
     await sessionService.ensureForBinding({
       bindingId: input.channelBindingId,
-      channel: "feishu",
+      channel: bindingChannel,
       workspaceId: input.workspaceId,
       currentTaskId: taskId,
     });
@@ -2292,10 +2296,20 @@ async function executeLeaderLoop(
   }
 
   let apiConfig: { provider: ProviderConfig; model: ModelProfile; binding: ExecutorBinding } | null = null;
+  // Leader on the LOCAL Claude Code CLI (subscription login) — the
+  // API-key path is skipped entirely. See claude-code-leader-runtime.ts.
+  let claudeCodeLeader: { modelName?: string; commandPath?: string } | null = null;
 
   try {
     const leaderAgentConfig = await resolveAgentForRole("leader");
-    if (
+    if (leaderAgentConfig && leaderAgentConfig.runtimeType === "claude-code") {
+      claudeCodeLeader = {
+        ...(leaderAgentConfig.modelName.trim().length > 0
+          ? { modelName: leaderAgentConfig.modelName.trim() }
+          : {}),
+        ...(leaderAgentConfig.commandPath ? { commandPath: leaderAgentConfig.commandPath } : {}),
+      };
+    } else if (
       leaderAgentConfig &&
       leaderAgentConfig.runtimeType === "ucm" &&
       leaderAgentConfig.provider &&
@@ -2307,7 +2321,7 @@ async function executeLeaderLoop(
     console.warn("[agent-resolution] Failed to resolve leader agent, falling back to legacy:", err instanceof Error ? err.message : String(err));
   }
 
-  if (!apiConfig) {
+  if (!apiConfig && !claudeCodeLeader) {
     try {
       const executorConfig = await readExecutorConfigFile();
       const resolved = resolveApiConfigFromRoleRouting(executorConfig);
@@ -2319,7 +2333,7 @@ async function executeLeaderLoop(
     }
   }
 
-  if (!apiConfig) {
+  if (!apiConfig && !claudeCodeLeader) {
     return {
       reason: "configuration_error",
       turnCount: 0,
@@ -2333,7 +2347,7 @@ async function executeLeaderLoop(
   try {
     const task = await new TaskRepository().getById(input.taskId);
     const override = task?.modelOverride ?? null;
-    if (override) {
+    if (override && apiConfig) {
       const executorConfigForOverride = await readExecutorConfigFile();
       apiConfig = applyModelOverrideToApiConfig(apiConfig, override, executorConfigForOverride);
     }
@@ -2791,7 +2805,7 @@ Some commands are HARD-BLOCKED even with \`require_escalated\`: \`rm -rf /\`, fo
       ...(leaderWorktreeId ? { baseWorkspaceDir: workspaceDir } : {}),
       systemPrompt: systemPromptWithRepo,
       initialPrompt: input.prompt,
-      apiConfig: leaderApiConfig,
+      ...(leaderApiConfig ? { apiConfig: leaderApiConfig } : {}),
       tavilyConfig,
       abortController: sharedAbortController,
       observeEvent: observeLeaderEvent,
@@ -2806,7 +2820,15 @@ Some commands are HARD-BLOCKED even with \`require_escalated\`: \`rm -rf /\`, fo
     };
 
     let result;
-    if (leaderWorkerMode !== "off" && leaderWorktreeId) {
+    if (claudeCodeLeader) {
+      // Local Claude Code leader — worker isolation doesn't apply (the
+      // CLI is its own process; tools still execute in THIS process
+      // behind the same approval/safety gates).
+      const { runLeaderRuntimeWithClaudeCode } = await import(
+        "./manager-automation/autonomous-loop/claude-code-leader-runtime"
+      );
+      result = await runLeaderRuntimeWithClaudeCode(runtimeConfig, claudeCodeLeader);
+    } else if (leaderWorkerMode !== "off" && leaderWorktreeId && leaderApiConfig) {
       leaderHardeningStatus.workerProcess = leaderWorkerMode === "required"
         ? {
             status: "failed",

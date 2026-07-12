@@ -11,8 +11,12 @@ export type FeishuMention = {
   tenantKey?: string;
 };
 
+// Shared across channel integrations — Slack events normalize into this
+// same shape (see integrations/slack/slack-event-normalizer.ts).
+export type InboundChannel = "feishu" | "slack";
+
 export type InboundChannelEvent = {
-  channel: "feishu";
+  channel: InboundChannel;
   eventId: string;
   eventType: "message" | "card_action" | "reaction" | "file";
   accountId: string;

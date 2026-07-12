@@ -24,7 +24,7 @@ export const BUILTIN_AGENT_ROLE_IDS = [
 ] as const;
 export type BuiltinAgentRoleId = (typeof BUILTIN_AGENT_ROLE_IDS)[number];
 export type AgentToolProfile = "full" | "coding" | "research" | "minimal";
-export type AgentRuntimeType = "ucm" | "codex" | "opencode" | "claude-code";
+export type AgentRuntimeType = "ucm" | "codex" | "opencode" | "claude-code" | "kiro";
 
 export type AgentProfile = Omit<
   AgentProfileSelect,
@@ -287,7 +287,7 @@ function normalizeRuntimeType(value: string | null | undefined): AgentRuntimeTyp
   }
 
   const trimmed = value.trim();
-  if (trimmed === "ucm" || trimmed === "codex" || trimmed === "opencode" || trimmed === "claude-code") {
+  if (trimmed === "ucm" || trimmed === "codex" || trimmed === "opencode" || trimmed === "claude-code" || trimmed === "kiro") {
     return trimmed;
   }
 
@@ -298,8 +298,25 @@ export function isBuiltinAgentRoleId(roleId: string): roleId is BuiltinAgentRole
   return BUILTIN_AGENT_ROLE_IDS.includes(roleId as BuiltinAgentRoleId);
 }
 
-function mustUseUcmRuntime(roleId: string): boolean {
+/**
+ * Leader roles must run a runtime that can drive the continuous
+ * autonomous loop: the native API loop ("ucm") or Claude Code via the
+ * Agent SDK ("claude-code"). One-shot CLI bridges coerce back to ucm.
+ * Mirrors isLeaderCapableRuntime in agent-resolution-service.ts.
+ */
+function isLeaderRole(roleId: string): boolean {
   return roleId === "leader" || roleId === "manager";
+}
+
+function isLeaderCapableRuntime(runtimeType: AgentRuntimeType): boolean {
+  return runtimeType === "ucm" || runtimeType === "claude-code";
+}
+
+function coerceLeaderRuntimeType(roleId: string, runtimeType: AgentRuntimeType): AgentRuntimeType {
+  if (!isLeaderRole(roleId)) {
+    return runtimeType;
+  }
+  return isLeaderCapableRuntime(runtimeType) ? runtimeType : "ucm";
 }
 
 async function getBuiltinSystemPrompt(roleId: BuiltinAgentRoleId): Promise<string> {
@@ -396,9 +413,10 @@ export async function ensureDefaultAgentProfiles(): Promise<void> {
     if ((existing.isBuiltin ?? 0) !== 1) {
       patch.isBuiltin = 1;
     }
-    if (mustUseUcmRuntime(roleId) && existing.runtimeType !== "ucm") {
+    const existingRuntime = normalizeRuntimeType(existing.runtimeType);
+    if (!existingRuntime) {
       patch.runtimeType = "ucm";
-    } else if (!normalizeRuntimeType(existing.runtimeType)) {
+    } else if (coerceLeaderRuntimeType(roleId, existingRuntime) !== existingRuntime) {
       patch.runtimeType = "ucm";
     }
 
@@ -505,9 +523,10 @@ export async function upsertAgentProfile(input: UpsertAgentProfileInput): Promis
 
   const db = createDb();
   const now = new Date();
-  const normalizedRuntimeType = mustUseUcmRuntime(roleId)
-    ? "ucm"
-    : normalizeRuntimeType(input.runtimeType) ?? "ucm";
+  const normalizedRuntimeType = coerceLeaderRuntimeType(
+    roleId,
+    normalizeRuntimeType(input.runtimeType) ?? "ucm",
+  );
   await validateToolNameLists(input);
   const encodedAllowedTools = encodeToolNameList(input.allowedTools);
   const encodedDisallowedTools = encodeToolNameList(input.disallowedTools);
@@ -581,9 +600,10 @@ export async function upsertAgentProfile(input: UpsertAgentProfileInput): Promis
       patch.modelOverride = toNullableTrimmedString(input.modelOverride);
     }
     if (Object.prototype.hasOwnProperty.call(input, "runtimeType")) {
-      patch.runtimeType = mustUseUcmRuntime(roleId)
-        ? "ucm"
-        : normalizeRuntimeType(input.runtimeType) ?? "ucm";
+      patch.runtimeType = coerceLeaderRuntimeType(
+        roleId,
+        normalizeRuntimeType(input.runtimeType) ?? "ucm",
+      );
     }
     if (Object.prototype.hasOwnProperty.call(input, "provider")) {
       patch.provider = toNullableTrimmedString(input.provider);

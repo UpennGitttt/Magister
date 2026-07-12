@@ -196,7 +196,7 @@ export type AgentProfile = {
   status?: string | null;
   mcpConfig?: string | null;
   maxConcurrentTasks?: number | null;
-  runtimeType?: "ucm" | "codex" | "opencode" | "claude-code" | null;
+  runtimeType?: "ucm" | "codex" | "opencode" | "claude-code" | "kiro" | null;
   provider?: string | null;
   commandPath?: string | null;
   customEnv?: string | null;

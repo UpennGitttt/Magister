@@ -103,7 +103,7 @@ test("maps installed (version) and authenticated (non-empty auth file) per CLI",
     return found;
   };
 
-  expect(statuses.map((s) => s.cli)).toEqual(["codex", "claude-code", "opencode"]);
+  expect(statuses.map((s) => s.cli)).toEqual(["codex", "claude-code", "opencode", "kiro"]);
 
   expect(byCli("codex").installed).toBe(true);
   expect(byCli("codex").version).toBe("codex-cli 0.129.0");

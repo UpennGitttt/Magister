@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 
 import { buildApp } from "./app";
 import { startFeishuWebSocketGateway, stopFeishuWebSocketGateway } from "./integrations/feishu/feishu-websocket-gateway";
+import { startSlackSocketGateway, stopSlackSocketGateway } from "./integrations/slack/slack-socket-gateway";
 import { getMagisterEnv } from "./lib/env";
 import { migrateLegacyUltimateDirs } from "./lib/magister-migration";
 import { ensureDefaultAgentProfiles } from "./services/agent-profile-service";
@@ -17,6 +18,7 @@ import { initMemoryRuntime } from "./services/memory/memory-runtime";
 import { materializePendingChangeReviewDrafts } from "./services/safe-apply/change-review-state-service";
 import { startRuntimeRecoveryLoop, stopRuntimeRecoveryLoop } from "./services/runtime-recovery-service";
 import { startRuntimeWorkspaceCleanupLoop, stopRuntimeWorkspaceCleanupLoop } from "./services/runtime-workspace-service";
+import { startScheduledTaskLoop, stopScheduledTaskLoop } from "./services/scheduled-task-service";
 import { startTaskRetentionLoop, stopTaskRetentionLoop } from "./services/task-retention-service";
 import { acquireProcessLock } from "./utils/process-lock";
 import { runGracefulShutdown } from "./utils/graceful-shutdown";
@@ -183,7 +185,9 @@ app.addHook("onClose", async () => {
   await stopRuntimeRecoveryLoop();
   await stopRuntimeWorkspaceCleanupLoop();
   await stopTaskRetentionLoop();
+  await stopScheduledTaskLoop();
   await stopFeishuWebSocketGateway();
+  await stopSlackSocketGateway();
   await lock.release();
 });
 
@@ -223,10 +227,12 @@ try {
 }
 
 await startFeishuWebSocketGateway();
+await startSlackSocketGateway();
 await startRuntimeRecoveryLoop();
 await startArtifactRetentionLoop();
 await startRuntimeWorkspaceCleanupLoop();
 await startTaskRetentionLoop();
+await startScheduledTaskLoop();
 
 // Feishu outbound — registers approval lifecycle hooks so creating
 // a dangerous-command approval also pushes a card to the bound
@@ -235,6 +241,13 @@ const { registerFeishuRouter } = await import(
   "./services/feishu/feishu-router"
 );
 registerFeishuRouter();
+
+// Slack outbound — approval Block Kit cards on the same approval
+// lifecycle hook. No-op when Slack tokens aren't configured.
+const { registerSlackRouter } = await import(
+  "./services/slack/slack-router"
+);
+registerSlackRouter();
 
 // Feishu chat-session TTL sweeper — closes sessions that never received
 // a terminal event (process crash mid-run, gateway disconnect, etc.).
