@@ -47,6 +47,7 @@ const cfg: ServeConfig = {
   distDir: resolve(here, "dist"),
   authUser: process.env.MAGISTER_WEB_AUTH_USER ?? "admin",
   authPass: process.env.MAGISTER_WEB_AUTH_PASS ?? "",
+  apiToken: process.env.MAGISTER_API_TOKEN ?? "",
 };
 const BACKEND_WS_URL = cfg.apiTarget.replace(/^http/, "ws") + "/ws";
 

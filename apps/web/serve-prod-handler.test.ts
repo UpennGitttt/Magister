@@ -7,7 +7,7 @@ import { createHttpHandler, deriveDeepLinkToken, type ServeConfig } from "./serv
 
 let distDir = "";
 function cfg(over: Partial<ServeConfig> = {}): ServeConfig {
-  return { apiTarget: "http://127.0.0.1:1", distDir, authUser: "admin", authPass: "", ...over };
+  return { apiTarget: "http://127.0.0.1:1", distDir, authUser: "admin", authPass: "", apiToken: "", ...over };
 }
 
 beforeEach(() => {
@@ -51,6 +51,23 @@ describe("createHttpHandler", () => {
     );
     expect(res.headers.get("content-encoding")).toBe("br");
     expect(Number(res.headers.get("content-length"))).toBeGreaterThan(0);
+  });
+
+  test("proxyApi injects the configured API token server-side", async () => {
+    const seen: { authorization?: string } = {};
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async (url: string, init: RequestInit) => {
+      const authHeader = new Headers(init.headers).get("authorization");
+      if (authHeader) seen.authorization = authHeader;
+      return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
+    }) as typeof fetch;
+    try {
+      const handler = createHttpHandler(cfg({ apiToken: "tok-abc" }));
+      await handler(new Request("http://localhost:3701/api/tasks"));
+      expect(seen.authorization).toBe("Bearer tok-abc");
+    } finally {
+      globalThis.fetch = origFetch;
+    }
   });
 
   describe("auth (authPass set)", () => {
