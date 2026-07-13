@@ -2482,6 +2482,11 @@ function buildSpawnTeammateTool(opts?: SpawnTeammateToolOpts): LeaderTool {
                       );
                     }
                   },
+                  // Cascade parent leader's cancel into the CLI subprocess.
+                  // Without this, /tasks/:id/cancel only aborts the leader's
+                  // own loop while spawned `codex exec` / `claude -p` keep
+                  // burning tokens until they exit on their own.
+                  signal: context.abortController.signal,
                 });
 
                 finalReason = cliResult.exitCode === 0 ? "completed" : "error";
