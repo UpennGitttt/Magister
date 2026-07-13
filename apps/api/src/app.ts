@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import fastifyWebsocket from "@fastify/websocket";
 
+import { registerApiAuth } from "./lib/api-auth";
 import { registerAdapterRoutes } from "./routes/adapters";
 import { registerApprovalRoutes } from "./routes/approvals";
 import { registerChannelCallbackRoutes } from "./routes/channel-callbacks";
@@ -42,6 +43,8 @@ export const API_BODY_LIMIT_BYTES = 150 * 1024 * 1024; // 150 MiB
 
 export function buildApp() {
   const app = Fastify({ bodyLimit: API_BODY_LIMIT_BYTES });
+
+  registerApiAuth(app);
 
   app.register(fastifyWebsocket);
   app.register(registerWebSocketRoutes);
