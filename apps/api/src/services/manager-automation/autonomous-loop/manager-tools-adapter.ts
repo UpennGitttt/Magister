@@ -79,6 +79,13 @@ import {
   updateProjectSpec,
 } from "../../project-spec-service";
 
+// A synchronous CLI teammate must not be able to freeze the leader turn
+// forever. spawnCliAgent supports timeoutMs; wire it with a generous
+// default so legitimate long runs survive but a hung child is reaped.
+const CLI_TEAMMATE_TIMEOUT_MS = Number(
+  process.env.MAGISTER_CLI_TEAMMATE_TIMEOUT_MS ?? 1_800_000,
+);
+
 // Sandbox-elevation v4.3 §4.1 — three-tier sandbox_permissions.
 //   "default" (deprecated alias for "use_default" kept for one release)
 //   "use_default"                 — current default-sandboxed bash
@@ -2388,6 +2395,13 @@ function buildSpawnTeammateTool(opts?: SpawnTeammateToolOpts): LeaderTool {
                   // (especially relevant for wait:false spawns that
                   // outlive the leader's own turn).
                   ...(context.abortController ? { signal: context.abortController.signal } : {}),
+                  // Bound wall-clock for CLI teammate (codex/claude-code/
+                  // opencode/kiro). On timeout the child is terminated and
+                  // reported as a failed teammate (exitCode:-1). Prevents
+                  // a hung CLI process from blocking the leader turn forever.
+                  ...(Number.isFinite(CLI_TEAMMATE_TIMEOUT_MS) && CLI_TEAMMATE_TIMEOUT_MS > 0
+                    ? { timeoutMs: CLI_TEAMMATE_TIMEOUT_MS }
+                    : {}),
                   ...(cliReasoningEffort ? { reasoningEffort: cliReasoningEffort } : {}),
                   ...(modelOverride ? { model: modelOverride } : {}),
                   ...(cliInstructions ? { instructions: cliInstructions } : {}),
@@ -2468,11 +2482,6 @@ function buildSpawnTeammateTool(opts?: SpawnTeammateToolOpts): LeaderTool {
                       );
                     }
                   },
-                  // Cascade parent leader's cancel into the CLI subprocess.
-                  // Without this, /tasks/:id/cancel only aborts the leader's
-                  // own loop while spawned `codex exec` / `claude -p` keep
-                  // burning tokens until they exit on their own.
-                  signal: context.abortController.signal,
                 });
 
                 finalReason = cliResult.exitCode === 0 ? "completed" : "error";
