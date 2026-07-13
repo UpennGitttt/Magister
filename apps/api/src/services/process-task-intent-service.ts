@@ -13,6 +13,8 @@ import { TaskRepository } from "../repositories/task-repository";
 import { RoleRuntimeRepository } from "../repositories/role-runtime-repository";
 import { ConversationBindingRepository } from "../repositories/conversation-binding-repository";
 import { ExecutionEventRepository } from "../repositories/execution-event-repository";
+import { TaskMailboxRepository } from "../repositories/task-mailbox-repository";
+import { getAbortController, isTaskQueued } from "./task-worker";
 import { LocalObservabilityAdapter } from "../observability/local-observability-adapter";
 import { getMagisterEnv } from "../lib/env";
 import { ChannelSessionService } from "./channel-session-service";
@@ -1249,6 +1251,32 @@ export async function processTaskIntent(
                   /* swallow — task continues regardless */
                 }
               }
+
+              // Single-flight guard (parity with the Web POST /tasks/:id/messages
+              // path): if a leader run is already live or queued for this task,
+              // do NOT start a second loop from the same checkpoint. Route the
+              // prompt to the mailbox; the running loop drains it between turns.
+              if (getAbortController(activeSession.taskId) || isTaskQueued(activeSession.taskId)) {
+                const mailbox = new TaskMailboxRepository();
+                const mid = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                await mailbox.create({
+                  id: mid,
+                  taskId: activeSession.taskId,
+                  content: input.prompt,
+                  sender: "user",
+                  createdAt: new Date(),
+                  requestId,
+                });
+                return {
+                  action: "resumed_session",
+                  taskId: activeSession.taskId,
+                  runId,
+                  requestId,
+                  reason: "queued_mailbox",
+                  status: "queued",
+                };
+              }
+
               // Feishu: run synchronously so caller gets finalAnswer
               const result = await executeLeaderLoop(job);
               // Publish the terminal event with FULL lifecycle parity
