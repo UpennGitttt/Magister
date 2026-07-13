@@ -158,7 +158,7 @@ test("getExpiredApprovals returns approvals older than timeout", async () => {
   expect(expiredCount).toBeGreaterThanOrEqual(1);
 
   const expired = await getApproval(oldId);
-  expect(expired?.status).toBe("approved");
+  expect(expired?.status).toBe("rejected");
   expect(expired?.resolvedBy).toBe("auto_timeout");
 });
 
@@ -299,4 +299,22 @@ test("resolveApproval CAS: idempotent replay (same decision) does NOT report con
   expect(replay?.landed).toBe(false);
   expect(replay?.conflict).toBe(false);
   expect(replay?.storedOutcome).toBe("approved");
+});
+
+test("timeout fails closed (rejected, not approved)", async () => {
+  // Create approval then wait past deadline — should reject, not approve.
+  const record = await createApproval(
+    "task-timeout-closed",
+    "bash",
+    { command: "rm -rf /tmp/test" },
+    "dangerous command",
+  );
+
+  // Use a tiny timeout (1ms) so it expires immediately when waitForApproval polls.
+  const outcome = await waitForApproval(record.id, 1);
+  expect(outcome).toBe("rejected");
+
+  const row = await getApproval(record.id);
+  expect(row?.status).toBe("rejected");
+  expect(row?.resolvedBy).toBe("auto_timeout");
 });

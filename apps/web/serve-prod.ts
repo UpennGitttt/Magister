@@ -47,6 +47,7 @@ const cfg: ServeConfig = {
   distDir: resolve(here, "dist"),
   authUser: process.env.MAGISTER_WEB_AUTH_USER ?? "admin",
   authPass: process.env.MAGISTER_WEB_AUTH_PASS ?? "",
+  apiToken: process.env.MAGISTER_API_TOKEN ?? "",
 };
 const BACKEND_WS_URL = cfg.apiTarget.replace(/^http/, "ws") + "/ws";
 
@@ -93,7 +94,9 @@ function startBunServer(): void {
     websocket: {
       open(ws: { send: (d: string) => void; close: () => void } & Record<string, unknown>) {
         try {
-          const backend = new WebSocket(BACKEND_WS_URL);
+          const backend = cfg.apiToken
+            ? new WebSocket(BACKEND_WS_URL, { headers: { authorization: `Bearer ${cfg.apiToken}` } } as unknown as string[])
+            : new WebSocket(BACKEND_WS_URL);
           backend.onmessage = (e: MessageEvent) => {
             try { ws.send(String(e.data)); } catch { /* client gone */ }
           };
@@ -196,7 +199,9 @@ function startNodeServer(): void {
     wss.handleUpgrade(nreq, socket, head, (client) => {
       let backend: import("ws").WebSocket | null = null;
       try {
-        backend = new WS.WebSocket(BACKEND_WS_URL);
+        backend = cfg.apiToken
+          ? new WS.WebSocket(BACKEND_WS_URL, { headers: { authorization: `Bearer ${cfg.apiToken}` } })
+          : new WS.WebSocket(BACKEND_WS_URL);
         backend.on("message", (d: import("ws").RawData) => {
           try { client.send(d.toString()); } catch { /* client gone */ }
         });

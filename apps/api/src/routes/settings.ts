@@ -41,6 +41,7 @@ import {
   readLocalSecretStoreFile,
   writeSecretValue,
 } from "../services/local-secret-store-service";
+import { getMagisterEnv } from "../lib/env";
 import { getExecutorSlotList } from "../services/executor-slot-service";
 import { getRoleRoutingList } from "../services/role-routing-service";
 import {
@@ -754,8 +755,10 @@ export async function registerSettingsRoutes(app: FastifyInstance) {
     }
     const auth = provider.auth;
     const secretRef = auth && (auth.kind === "api_key" || auth.kind === "oauth_token") ? auth.secretRef : null;
-    const value = getSecretValueForAuth(auth) ?? "";
-    return { ok: true, data: { secretRef: secretRef ?? null, value, configured: value.length > 0 } };
+    const realValue = getSecretValueForAuth(auth) ?? "";
+    const revealAllowed = (getMagisterEnv("MAGISTER_ALLOW_SECRET_REVEAL") ?? "on").toLowerCase() !== "off";
+    const value = revealAllowed ? realValue : "";
+    return { ok: true, data: { secretRef: secretRef ?? null, value, configured: realValue.length > 0 } };
   });
 
   // Write a provider's API key by provider id — the server resolves the real

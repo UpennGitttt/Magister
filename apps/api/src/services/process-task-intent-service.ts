@@ -13,6 +13,8 @@ import { TaskRepository } from "../repositories/task-repository";
 import { RoleRuntimeRepository } from "../repositories/role-runtime-repository";
 import { ConversationBindingRepository } from "../repositories/conversation-binding-repository";
 import { ExecutionEventRepository } from "../repositories/execution-event-repository";
+import { TaskMailboxRepository } from "../repositories/task-mailbox-repository";
+import { getAbortController, isTaskQueued } from "./task-worker";
 import { LocalObservabilityAdapter } from "../observability/local-observability-adapter";
 import { getMagisterEnv } from "../lib/env";
 import { ChannelSessionService } from "./channel-session-service";
@@ -419,6 +421,16 @@ const REQUEST_ID_ALPHABET =
  *  `<<goal_continuation>>` sentinel prefix (matches the existing
  *  PLAN_TOKEN_* filtering pattern in render.tsx). */
 const GOAL_CONTINUATION_SENTINEL = "<<goal_continuation>>";
+
+// In-flight markers for synchronous channel (Feishu/Slack) leader runs.
+// The sync-channel resume path runs executeLeaderLoop inline WITHOUT going
+// through taskWorker, so it registers no AbortController the single-flight
+// guard could see — two rapid channel messages for the same task would each
+// start a duplicate loop from the same checkpoint. This dedicated set (NOT
+// the shared taskWorker AbortController map, which the Web path owns and
+// whose cancel semantics we must not clobber) lets the guard see an active
+// sync-channel run. Keyed by taskId.
+const inFlightSyncChannelRuns = new Set<string>();
 
 function formatElapsed(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -1249,8 +1261,52 @@ export async function processTaskIntent(
                   /* swallow — task continues regardless */
                 }
               }
-              // Feishu: run synchronously so caller gets finalAnswer
-              const result = await executeLeaderLoop(job);
+
+              // Single-flight guard (parity with the Web POST /tasks/:id/messages
+              // path): if a leader run is already live or queued for this task,
+              // do NOT start a second loop from the same checkpoint. Route the
+              // prompt to the mailbox; the running loop drains it between turns.
+              if (
+                getAbortController(activeSession.taskId) ||
+                isTaskQueued(activeSession.taskId) ||
+                inFlightSyncChannelRuns.has(activeSession.taskId)
+              ) {
+                const mailbox = new TaskMailboxRepository();
+                const mid = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                await mailbox.create({
+                  id: mid,
+                  taskId: activeSession.taskId,
+                  content: input.prompt,
+                  sender: "user",
+                  createdAt: new Date(),
+                  requestId,
+                });
+                return {
+                  action: "resumed_session",
+                  taskId: activeSession.taskId,
+                  runId,
+                  requestId,
+                  reason: "queued_mailbox",
+                  status: "queued",
+                };
+              }
+
+              // Mark this task in-flight so a concurrent channel message for
+              // the same task hits the single-flight guard above. The check
+              // (guard) → set (here) window has no await between it and the
+              // guard, so it's atomic under single-threaded JS. We use a
+              // dedicated set rather than the shared taskWorker AbortController
+              // map: writing there would clobber the Web path's controller and
+              // break its cancel (getAbortController is how POST /cancel reaches
+              // a live run). The guard-miss path is the only writer.
+              inFlightSyncChannelRuns.add(activeSession.taskId);
+              let result: Awaited<ReturnType<typeof executeLeaderLoop>>;
+              try {
+                // Feishu: run synchronously so caller gets finalAnswer
+                result = await executeLeaderLoop(job);
+              } finally {
+                inFlightSyncChannelRuns.delete(activeSession.taskId);
+              }
               // Publish the terminal event with FULL lifecycle parity
               // (persist + WS broadcast + bus + CANCELLED detection +
               // timing + failure reflection). Returns the derived

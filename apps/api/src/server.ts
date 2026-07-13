@@ -4,6 +4,7 @@ import { homedir } from "node:os";
 import { buildApp } from "./app";
 import { startFeishuWebSocketGateway, stopFeishuWebSocketGateway } from "./integrations/feishu/feishu-websocket-gateway";
 import { startSlackSocketGateway, stopSlackSocketGateway } from "./integrations/slack/slack-socket-gateway";
+import { assertBindSafe, hasApiToken } from "./lib/api-auth";
 import { getMagisterEnv } from "./lib/env";
 import { migrateLegacyUltimateDirs } from "./lib/magister-migration";
 import { ensureDefaultAgentProfiles } from "./services/agent-profile-service";
@@ -215,6 +216,8 @@ async function handleShutdownSignal(): Promise<void> {
 }
 process.once("SIGINT", () => void handleShutdownSignal());
 process.once("SIGTERM", () => void handleShutdownSignal());
+
+assertBindSafe(host, hasApiToken());
 
 try {
   await app.listen({

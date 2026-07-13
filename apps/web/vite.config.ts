@@ -119,6 +119,17 @@ export default defineConfig({
         changeOrigin: true,
         ws: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
+        configure: (proxy) => {
+          const token = process.env.MAGISTER_API_TOKEN;
+          if (token) {
+            proxy.on("proxyReq", (proxyReq) => {
+              proxyReq.setHeader("authorization", `Bearer ${token}`);
+            });
+            proxy.on("proxyReqWs", (proxyReq) => {
+              proxyReq.setHeader("authorization", `Bearer ${token}`);
+            });
+          }
+        },
       },
     },
   },
@@ -136,6 +147,17 @@ export default defineConfig({
         changeOrigin: true,
         ws: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
+        configure: (proxy) => {
+          const token = process.env.MAGISTER_API_TOKEN;
+          if (token) {
+            proxy.on("proxyReq", (proxyReq) => {
+              proxyReq.setHeader("authorization", `Bearer ${token}`);
+            });
+            proxy.on("proxyReqWs", (proxyReq) => {
+              proxyReq.setHeader("authorization", `Bearer ${token}`);
+            });
+          }
+        },
       },
     },
   },

@@ -22,6 +22,8 @@ export interface ServeConfig {
   authUser: string;
   /** Basic-auth password; empty string disables auth entirely. */
   authPass: string;
+  /** API bearer token injected server-side into backend requests. Empty = none. */
+  apiToken: string;
 }
 
 const AUTH_COOKIE_NAME = "magister_auth";
@@ -137,9 +139,11 @@ export function createHttpHandler(cfg: ServeConfig): (req: Request) => Promise<R
     const backendPath = url.pathname.replace(/^\/api/, "") + url.search;
     const isStream = url.pathname.match(/\/tasks\/[^/]+\/stream$/);
     try {
+      const outHeaders = new Headers(req.headers);
+      if (cfg.apiToken) outHeaders.set("authorization", `Bearer ${cfg.apiToken}`);
       const backendResp = await fetch(`${apiTarget}${backendPath}`, {
         method: req.method,
-        headers: req.headers,
+        headers: outHeaders,
         body: req.method !== "GET" && req.method !== "HEAD" ? (req.body ?? null) : null,
         // Node's undici requires duplex for a streaming request body.
         ...(req.body ? { duplex: "half" } : {}),

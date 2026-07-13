@@ -225,7 +225,7 @@ function sanitizeToolArgs(toolArgs: Record<string, unknown>): Record<string, unk
 
 async function expireApprovalWithTimeout(approvalId: string, now = Date.now()): Promise<void> {
   const landed = await repo.resolve(approvalId, {
-    state: "approved",
+    state: "rejected",
     resolvedAt: new Date(now),
     resolvedBy: "auto_timeout",
   });
@@ -233,7 +233,7 @@ async function expireApprovalWithTimeout(approvalId: string, now = Date.now()): 
   const updated = await repo.getById(approvalId);
   if (updated) {
     dispatchHooks(resolvedHooks, rowToRecord(updated));
-    await emitApprovalResolvedEvent(updated, "approved");
+    await emitApprovalResolvedEvent(updated, "rejected");
   }
 }
 
@@ -720,7 +720,7 @@ export async function waitForApproval(
 
     if (Date.now() >= deadline) {
       await expireApprovalWithTimeout(id);
-      return "approved";
+      return "rejected";
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
