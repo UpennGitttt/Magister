@@ -70,6 +70,22 @@ describe("createHttpHandler", () => {
     }
   });
 
+  test("proxyApi does not inject authorization when apiToken is empty", async () => {
+    const seen: { authorization?: string | undefined } = {};
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async (url: string, init: RequestInit) => {
+      seen.authorization = new Headers(init.headers).get("authorization") ?? undefined;
+      return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
+    }) as typeof fetch;
+    try {
+      const handler = createHttpHandler(cfg({ apiToken: "" }));
+      await handler(new Request("http://localhost:3701/api/tasks"));
+      expect(seen.authorization).toBeUndefined();
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+
   describe("auth (authPass set)", () => {
     const pass = "s3cret";
     test("401 with WWW-Authenticate when no credentials", async () => {
