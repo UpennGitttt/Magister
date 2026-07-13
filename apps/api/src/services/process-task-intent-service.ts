@@ -14,7 +14,7 @@ import { RoleRuntimeRepository } from "../repositories/role-runtime-repository";
 import { ConversationBindingRepository } from "../repositories/conversation-binding-repository";
 import { ExecutionEventRepository } from "../repositories/execution-event-repository";
 import { TaskMailboxRepository } from "../repositories/task-mailbox-repository";
-import { getAbortController, isTaskQueued, registerAbortController, removeAbortController } from "./task-worker";
+import { getAbortController, isTaskQueued } from "./task-worker";
 import { LocalObservabilityAdapter } from "../observability/local-observability-adapter";
 import { getMagisterEnv } from "../lib/env";
 import { ChannelSessionService } from "./channel-session-service";
@@ -421,6 +421,16 @@ const REQUEST_ID_ALPHABET =
  *  `<<goal_continuation>>` sentinel prefix (matches the existing
  *  PLAN_TOKEN_* filtering pattern in render.tsx). */
 const GOAL_CONTINUATION_SENTINEL = "<<goal_continuation>>";
+
+// In-flight markers for synchronous channel (Feishu/Slack) leader runs.
+// The sync-channel resume path runs executeLeaderLoop inline WITHOUT going
+// through taskWorker, so it registers no AbortController the single-flight
+// guard could see — two rapid channel messages for the same task would each
+// start a duplicate loop from the same checkpoint. This dedicated set (NOT
+// the shared taskWorker AbortController map, which the Web path owns and
+// whose cancel semantics we must not clobber) lets the guard see an active
+// sync-channel run. Keyed by taskId.
+const inFlightSyncChannelRuns = new Set<string>();
 
 function formatElapsed(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -1256,7 +1266,11 @@ export async function processTaskIntent(
               // path): if a leader run is already live or queued for this task,
               // do NOT start a second loop from the same checkpoint. Route the
               // prompt to the mailbox; the running loop drains it between turns.
-              if (getAbortController(activeSession.taskId) || isTaskQueued(activeSession.taskId)) {
+              if (
+                getAbortController(activeSession.taskId) ||
+                isTaskQueued(activeSession.taskId) ||
+                inFlightSyncChannelRuns.has(activeSession.taskId)
+              ) {
                 const mailbox = new TaskMailboxRepository();
                 const mid = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
                 await mailbox.create({
@@ -1277,21 +1291,21 @@ export async function processTaskIntent(
                 };
               }
 
-              // Register an in-flight marker so a concurrent channel message
-              // for the same task hits the single-flight guard above (the
-              // sync-channel path otherwise registers nothing the guard can
-              // see, letting two rapid messages start duplicate loops from
-              // the same checkpoint). executeLeaderLoop reuses this same
-              // controller via getAbortController(taskId), so cancel reaches
-              // this run too.
-              const channelRunAbort = new AbortController();
-              registerAbortController(activeSession.taskId, channelRunAbort);
+              // Mark this task in-flight so a concurrent channel message for
+              // the same task hits the single-flight guard above. The check
+              // (guard) → set (here) window has no await between it and the
+              // guard, so it's atomic under single-threaded JS. We use a
+              // dedicated set rather than the shared taskWorker AbortController
+              // map: writing there would clobber the Web path's controller and
+              // break its cancel (getAbortController is how POST /cancel reaches
+              // a live run). The guard-miss path is the only writer.
+              inFlightSyncChannelRuns.add(activeSession.taskId);
               let result: Awaited<ReturnType<typeof executeLeaderLoop>>;
               try {
                 // Feishu: run synchronously so caller gets finalAnswer
                 result = await executeLeaderLoop(job);
               } finally {
-                removeAbortController(activeSession.taskId);
+                inFlightSyncChannelRuns.delete(activeSession.taskId);
               }
               // Publish the terminal event with FULL lifecycle parity
               // (persist + WS broadcast + bus + CANCELLED detection +
@@ -2733,10 +2747,9 @@ Some commands are HARD-BLOCKED even with \`require_escalated\`: \`rm -rf /\`, fo
     // CANCELLED — exactly the "cancel doesn't work, both old and new
     // turns appear running" symptom the user reported.
     //
-    // The sync-channel resume path now registers its controller
-    // upstream (in the sync-source resume branch), so cancel reaches
-    // that path too. Only truly new sync-channel sessions (first-turn,
-    // no prior runtime) fall back to a fresh controller.
+    // The sync Feishu path doesn't go through taskWorker (no
+    // registration), so it falls back to a fresh controller — cancel
+    // isn't supported there anyway.
     const { getAbortController } = await import("./task-worker");
     const sharedAbortController = getAbortController(input.taskId) ?? new AbortController();
 
