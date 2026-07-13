@@ -82,9 +82,10 @@ import {
 // A synchronous CLI teammate must not be able to freeze the leader turn
 // forever. spawnCliAgent supports timeoutMs; wire it with a generous
 // default so legitimate long runs survive but a hung child is reaped.
-const CLI_TEAMMATE_TIMEOUT_MS = Number(
-  process.env.MAGISTER_CLI_TEAMMATE_TIMEOUT_MS ?? 1_800_000,
-);
+const CLI_TEAMMATE_TIMEOUT_MS = (() => {
+  const raw = Number(process.env.MAGISTER_CLI_TEAMMATE_TIMEOUT_MS ?? 1_800_000);
+  return Number.isFinite(raw) && raw > 0 ? raw : 1_800_000;
+})();
 
 // Sandbox-elevation v4.3 §4.1 — three-tier sandbox_permissions.
 //   "default" (deprecated alias for "use_default" kept for one release)

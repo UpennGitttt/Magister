@@ -14,7 +14,7 @@ import { RoleRuntimeRepository } from "../repositories/role-runtime-repository";
 import { ConversationBindingRepository } from "../repositories/conversation-binding-repository";
 import { ExecutionEventRepository } from "../repositories/execution-event-repository";
 import { TaskMailboxRepository } from "../repositories/task-mailbox-repository";
-import { getAbortController, isTaskQueued } from "./task-worker";
+import { getAbortController, isTaskQueued, registerAbortController, removeAbortController } from "./task-worker";
 import { LocalObservabilityAdapter } from "../observability/local-observability-adapter";
 import { getMagisterEnv } from "../lib/env";
 import { ChannelSessionService } from "./channel-session-service";
@@ -1277,8 +1277,22 @@ export async function processTaskIntent(
                 };
               }
 
-              // Feishu: run synchronously so caller gets finalAnswer
-              const result = await executeLeaderLoop(job);
+              // Register an in-flight marker so a concurrent channel message
+              // for the same task hits the single-flight guard above (the
+              // sync-channel path otherwise registers nothing the guard can
+              // see, letting two rapid messages start duplicate loops from
+              // the same checkpoint). executeLeaderLoop reuses this same
+              // controller via getAbortController(taskId), so cancel reaches
+              // this run too.
+              const channelRunAbort = new AbortController();
+              registerAbortController(activeSession.taskId, channelRunAbort);
+              let result: Awaited<ReturnType<typeof executeLeaderLoop>>;
+              try {
+                // Feishu: run synchronously so caller gets finalAnswer
+                result = await executeLeaderLoop(job);
+              } finally {
+                removeAbortController(activeSession.taskId);
+              }
               // Publish the terminal event with FULL lifecycle parity
               // (persist + WS broadcast + bus + CANCELLED detection +
               // timing + failure reflection). Returns the derived
@@ -2719,9 +2733,10 @@ Some commands are HARD-BLOCKED even with \`require_escalated\`: \`rm -rf /\`, fo
     // CANCELLED — exactly the "cancel doesn't work, both old and new
     // turns appear running" symptom the user reported.
     //
-    // The sync Feishu path doesn't go through taskWorker (no
-    // registration), so it falls back to a fresh controller — cancel
-    // isn't supported there anyway.
+    // The sync-channel resume path now registers its controller
+    // upstream (in the sync-source resume branch), so cancel reaches
+    // that path too. Only truly new sync-channel sessions (first-turn,
+    // no prior runtime) fall back to a fresh controller.
     const { getAbortController } = await import("./task-worker");
     const sharedAbortController = getAbortController(input.taskId) ?? new AbortController();
 

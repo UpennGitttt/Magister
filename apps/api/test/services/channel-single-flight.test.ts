@@ -121,10 +121,10 @@ test("channel resume routes to mailbox when a run is already live", async () => 
     // Assert: NO synchronous finalAnswer (since it routed to mailbox)
     expect(result.finalAnswer).toBeUndefined();
 
-    // Single-flight proof: the guard returns BEFORE executeLeaderLoop, so
-    // NO leader loop ran for this prompt. A second loop would have emitted
-    // execution_events (via publishSyncTerminalEvent's terminal write).
-    // Zero events => no second loop started.
+    // Necessary condition for single-flight: the guard returns BEFORE
+    // executeLeaderLoop, so no leader loop ran and no terminal event was
+    // written for this prompt. (The primary proof is the mailbox row above
+    // plus the clean resumed_session return; this is a corroborating check.)
     const { ExecutionEventRepository } = await import("../../src/repositories/execution-event-repository");
     const events = await new ExecutionEventRepository().listByTaskId(taskId);
     expect(events.length).toBe(0);

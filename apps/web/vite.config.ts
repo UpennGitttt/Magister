@@ -125,6 +125,9 @@ export default defineConfig({
             proxy.on("proxyReq", (proxyReq) => {
               proxyReq.setHeader("authorization", `Bearer ${token}`);
             });
+            proxy.on("proxyReqWs", (proxyReq) => {
+              proxyReq.setHeader("authorization", `Bearer ${token}`);
+            });
           }
         },
       },
@@ -148,6 +151,9 @@ export default defineConfig({
           const token = process.env.MAGISTER_API_TOKEN;
           if (token) {
             proxy.on("proxyReq", (proxyReq) => {
+              proxyReq.setHeader("authorization", `Bearer ${token}`);
+            });
+            proxy.on("proxyReqWs", (proxyReq) => {
               proxyReq.setHeader("authorization", `Bearer ${token}`);
             });
           }
