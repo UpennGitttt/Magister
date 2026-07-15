@@ -195,6 +195,40 @@ test("no Slack and no Feishu configured: records digest.sent with channel none, 
   expect(JSON.parse(sent[0]!.payloadJson!).channel).toBe("none");
 });
 
+test("Slack delivery failure does not record digest.sent; next tick retries the same window", async () => {
+  await seedSignal("evt-sig-fail", "Runtime run-9 stalled");
+
+  const generator = async () =>
+    JSON.stringify({ items: [{ kind: "stuck", text: "run-9 stalled", ref: "run-9" }] });
+
+  const failing = await runDigestTick(NOW, {
+    slackClient: {
+      postMessage: async () => {
+        throw new Error("rate_limited");
+      },
+      updateMessage: async () => ({ channel: "C0DIGEST", ts: "1" }),
+      authTest: async () => ({ botUserId: "B1", team: "T1" }),
+    },
+    generator,
+  });
+
+  expect(failing).toEqual({ status: "delivery_failed", channel: "none", itemCount: 1 });
+  expect(await listDigestSentEvents()).toHaveLength(0);
+
+  // Retry an hour later succeeds and still sees the failed window's signal.
+  const { posts, client } = fakeSlackClient();
+  const retried = await runDigestTick(new Date(NOW.getTime() + 60 * 60 * 1000), {
+    slackClient: client,
+    generator,
+  });
+
+  expect(retried.status).toBe("sent");
+  expect(retried.channel).toBe("slack");
+  expect(posts).toHaveLength(1);
+  expect(posts[0]!.text).toContain("run-9 stalled");
+  expect(await listDigestSentEvents()).toHaveLength(1);
+});
+
 test("Feishu fallback delivers plain text when Slack is not configured", async () => {
   delete process.env.MAGISTER_DIGEST_SLACK_CHANNEL;
   process.env.MAGISTER_DIGEST_FEISHU_CHAT_ID = "oc_digest";

@@ -55,6 +55,7 @@ them back.
 | `MAGISTER_DIGEST_HOUR` | `9` | earliest local hour to send |
 | `MAGISTER_DIGEST_SLACK_CHANNEL` | — | Slack channel id (preferred) |
 | `MAGISTER_DIGEST_FEISHU_CHAT_ID` | — | Feishu chat id (plain-text fallback) |
+| `MAGISTER_DIGEST_OPERATOR_IDS` | — | comma-separated Slack user ids allowed to click digest buttons; unset = any channel member (post to a private channel) |
 
 ## Known ceilings (v1)
 
@@ -64,3 +65,10 @@ them back.
 - Acted-on metric has no query endpoint; events are in `execution_events`
   and SQL-queryable.
 - Feishu path has no buttons (Slack-only interactivity by design).
+- Times are server-local: the once-per-day gate and `MAGISTER_DIGEST_HOUR`
+  follow the server TZ, not the operator's.
+- `listByTypesSince` caps at 500 rows — with >500 signals/day the sentinel
+  dedup set and the digest window silently truncate. Paginate if a fleet
+  ever gets that noisy.
+- The four event types have no `taskId`, so task retention never prunes
+  them; a long-running instance accumulates them until a TTL path exists.

@@ -11,8 +11,9 @@ import {
  * Daily progress digest — aggregates sentinel signals + terminal task
  * transitions since the last digest, asks the leader model to compose a
  * short team digest, and delivers it to Slack (Block Kit with act/dismiss
- * buttons) or Feishu (plain text). Records a `digest.sent` event either
- * way so the next tick's window starts where this one ended.
+ * buttons) or Feishu (plain text). Records a `digest.sent` event only on
+ * successful delivery (or an empty window) so a failed delivery retries
+ * with the same window on the next tick instead of losing its signals.
  *
  * Spec: docs/superpowers/specs/2026-07-14-trusted-progress-engine-design.md
  * Loop shape mirrors sentinel-service.ts. Off by default
@@ -23,9 +24,11 @@ const DEFAULT_DIGEST_HOUR = 9;
 const DIGEST_LOOP_INTERVAL_MS = 10 * 60 * 1000;
 const DEFAULT_WINDOW_MS = 24 * 60 * 60 * 1000;
 const GENERATOR_TIMEOUT_MS = 60_000;
-// Slack chat.postMessage caps text at 40k; button `value` at 2k.
+// Slack chat.postMessage caps text at 40k; button `value` at 2k;
+// each mrkdwn section at ~3k (exceeding it rejects the whole message).
 const DIGEST_TEXT_CAP = 8000;
 const BUTTON_VALUE_CAP = 1500;
+const SECTION_TEXT_CAP = 2800;
 
 export const DIGEST_SENT_EVENT_TYPE = "digest.sent";
 export const DIGEST_ACTION_TAKEN_EVENT_TYPE = "digest.action_taken";
@@ -60,11 +63,13 @@ export interface DigestTickDependencies {
 }
 
 export interface DigestTickResult {
-  status: "sent" | "skipped_already_sent" | "skipped_empty";
+  status: "sent" | "skipped_already_sent" | "skipped_empty" | "delivery_failed";
   channel: "slack" | "feishu" | "none";
   itemCount: number;
 }
 
+// Server-local time on purpose: the once-per-day gate and
+// MAGISTER_DIGEST_HOUR both follow the server TZ, not the operator's.
 function startOfDay(now: Date): Date {
   const d = new Date(now);
   d.setHours(0, 0, 0, 0);
@@ -201,7 +206,7 @@ export function buildDigestBlocks(items: DigestItem[], now: Date): unknown[] {
       .join("\n");
     blocks.push({
       type: "section",
-      text: { type: "mrkdwn", text: `*${KIND_TITLES[kind]}*\n${body}` },
+      text: { type: "mrkdwn", text: `*${KIND_TITLES[kind]}*\n${body}`.slice(0, SECTION_TEXT_CAP) },
     });
   }
   for (const item of items) {
@@ -211,7 +216,7 @@ export function buildDigestBlocks(items: DigestItem[], now: Date): unknown[] {
     });
     blocks.push({
       type: "section",
-      text: { type: "mrkdwn", text: `💡 ${item.suggestedAction}` },
+      text: { type: "mrkdwn", text: `💡 ${item.suggestedAction}`.slice(0, SECTION_TEXT_CAP) },
     });
     blocks.push({
       type: "actions",
@@ -272,7 +277,10 @@ export async function runDigestTick(
   const signals: SentinelSignalPayload[] = [];
   for (const event of signalEvents) {
     try {
-      signals.push(JSON.parse(event.payloadJson ?? "{}") as SentinelSignalPayload);
+      const parsed = JSON.parse(event.payloadJson ?? "{}") as Partial<SentinelSignalPayload>;
+      if (typeof parsed.signalType === "string" && typeof parsed.summary === "string") {
+        signals.push(parsed as SentinelSignalPayload);
+      }
     } catch {
       // skip unparseable historical payloads
     }
@@ -321,6 +329,7 @@ export async function runDigestTick(
 
   let channel: DigestTickResult["channel"] = "none";
   let messageTs: string | undefined;
+  let deliveryFailed = false;
 
   if (slackClient && slackChannel) {
     try {
@@ -332,6 +341,7 @@ export async function runDigestTick(
       channel = "slack";
       messageTs = result.ts;
     } catch (err) {
+      deliveryFailed = true;
       console.warn(`[digest] Slack delivery failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   } else if (feishuChatId) {
@@ -349,8 +359,15 @@ export async function runDigestTick(
       await sendText(feishuChatId, items ? buildFallbackText(items) : plainText!);
       channel = "feishu";
     } catch (err) {
+      deliveryFailed = true;
       console.warn(`[digest] Feishu delivery failed: ${err instanceof Error ? err.message : String(err)}`);
     }
+  }
+
+  // A configured channel that errored must NOT advance the window: the
+  // next tick retries the same window so its signals are never lost.
+  if (deliveryFailed) {
+    return { status: "delivery_failed", channel: "none", itemCount };
   }
 
   await recordSent({ channel, itemCount, ...(messageTs ? { messageTs } : {}) });
@@ -369,7 +386,11 @@ export async function startDigestLoop() {
   const enabled = (process.env.MAGISTER_DIGEST_ENABLED ?? "false").toLowerCase() === "true";
   if (!enabled || digestLoopTimer) return;
 
-  const digestHour = parsePositiveInt(process.env.MAGISTER_DIGEST_HOUR, DEFAULT_DIGEST_HOUR);
+  // Clamp to a real hour — 24+ would make `getHours() < digestHour` always true.
+  const digestHour = Math.min(
+    parsePositiveInt(process.env.MAGISTER_DIGEST_HOUR, DEFAULT_DIGEST_HOUR),
+    23,
+  );
 
   const tick = async () => {
     if (digestLoopInFlight) return;

@@ -18,10 +18,12 @@ beforeEach(() => {
     tempRoot,
     `digest-action-${Date.now()}-${Math.random().toString(16).slice(2)}.sqlite`,
   );
+  delete process.env.MAGISTER_DIGEST_OPERATOR_IDS;
 });
 
 afterEach(() => {
   delete process.env.MAGISTER_DB_PATH;
+  delete process.env.MAGISTER_DIGEST_OPERATOR_IDS;
   rmSync(tempRoot, { recursive: true, force: true });
 });
 
@@ -133,6 +135,49 @@ test("bad value JSON does not throw; event still records with empty actionText",
   const events = await listEvents(DIGEST_ACTION_TAKEN_EVENT_TYPE);
   expect(events).toHaveLength(1);
   expect(JSON.parse(events[0]!.payloadJson!).actionText).toBe("");
+});
+
+test("non-operator click is refused when MAGISTER_DIGEST_OPERATOR_IDS is set", async () => {
+  process.env.MAGISTER_DIGEST_OPERATOR_IDS = "U_BOSS, U_OTHER";
+  let intentCalled = false;
+  const { posts, client } = fakeSlackClient();
+
+  // Sender is U1 (see buildInteraction) — not in the allowlist.
+  await handleDigestAction(
+    buildInteraction("digest_act", JSON.stringify({ actionText: "Nudge run-1" })),
+    {
+      slackClient: client,
+      runIntent: async () => {
+        intentCalled = true;
+        return { taskId: "never" };
+      },
+    },
+  );
+
+  expect(intentCalled).toBe(false);
+  expect(await listEvents(DIGEST_ACTION_TAKEN_EVENT_TYPE)).toHaveLength(0);
+  expect(posts).toHaveLength(1);
+  expect(posts[0]!.text).toContain("⛔");
+});
+
+test("operator click passes the allowlist check", async () => {
+  process.env.MAGISTER_DIGEST_OPERATOR_IDS = "U1";
+  const intents: string[] = [];
+  const { client } = fakeSlackClient();
+
+  await handleDigestAction(
+    buildInteraction("digest_act", JSON.stringify({ actionText: "Nudge run-1" })),
+    {
+      slackClient: client,
+      runIntent: async (input) => {
+        intents.push(input.prompt);
+        return { taskId: "task_ok_12345678" };
+      },
+    },
+  );
+
+  expect(intents).toEqual(["Nudge run-1"]);
+  expect(await listEvents(DIGEST_ACTION_TAKEN_EVENT_TYPE)).toHaveLength(1);
 });
 
 test("intent failure is swallowed; event records without taskId and ack warns", async () => {

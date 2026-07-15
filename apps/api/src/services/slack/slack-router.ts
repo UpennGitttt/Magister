@@ -256,6 +256,11 @@ export interface DigestActionDependencies {
  * these carry a plain `{actionText}` value, not a signed envelope —
  * clicking only records an event and (for "Do it") creates an ordinary
  * task, both benign in a single-operator workspace.
+ *
+ * MAGISTER_DIGEST_OPERATOR_IDS (comma-separated Slack user ids), when
+ * set, restricts who may click: anyone else gets an in-thread refusal
+ * and no event/task. Unset = any channel member (single-operator
+ * deployments should post the digest to a private channel).
  */
 export async function handleDigestAction(
   interaction: NormalizedSlackInteraction,
@@ -264,6 +269,29 @@ export async function handleDigestAction(
   const { event, messageTs } = interaction;
   const actionId = event.content.actionId;
   const eventRepo = dependencies.eventRepository ?? new ExecutionEventRepository();
+
+  const operatorIds = (process.env.MAGISTER_DIGEST_OPERATOR_IDS ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+  if (operatorIds.length > 0 && !operatorIds.includes(event.sender.platformUserId)) {
+    const client =
+      dependencies.slackClient !== undefined
+        ? dependencies.slackClient
+        : buildSlackClientIfConfigured(parseSlackConfig().botToken);
+    if (client && messageTs) {
+      try {
+        await client.postMessage({
+          channel: event.chatId,
+          text: "⛔ Digest actions are restricted to the configured operators.",
+          threadTs: messageTs,
+        });
+      } catch {
+        // ack is best-effort
+      }
+    }
+    return;
+  }
 
   let actionText = "";
   const rawValue = interaction.actions[0]?.value;
