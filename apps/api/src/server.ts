@@ -13,6 +13,7 @@ import { startArtifactRetentionLoop, stopArtifactRetentionLoop } from "./service
 import { seedBuiltinSkills } from "./services/builtin-skills-bootstrap";
 import { probeCliVersions } from "./services/cli-bridge/cli-version-probe";
 import { recoverStaleTasks } from "./services/crash-recovery-service";
+import { startDigestLoop, stopDigestLoop } from "./services/digest-service";
 import { startAgingSweeperLoop } from "./services/memory/memory-aging-sweeper";
 import { cleanupTmpFiles } from "./services/memory/memory-fs-service";
 import { initMemoryRuntime } from "./services/memory/memory-runtime";
@@ -189,6 +190,7 @@ app.addHook("onClose", async () => {
   await stopTaskRetentionLoop();
   await stopScheduledTaskLoop();
   await stopSentinelLoop();
+  await stopDigestLoop();
   await stopFeishuWebSocketGateway();
   await stopSlackSocketGateway();
   await lock.release();
@@ -239,6 +241,7 @@ await startRuntimeWorkspaceCleanupLoop();
 await startTaskRetentionLoop();
 await startScheduledTaskLoop();
 await startSentinelLoop();
+await startDigestLoop();
 
 // Feishu outbound — registers approval lifecycle hooks so creating
 // a dangerous-command approval also pushes a card to the bound
