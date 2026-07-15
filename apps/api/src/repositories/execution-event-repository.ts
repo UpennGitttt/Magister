@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, or, sql } from "@magister/db";
+import { and, asc, desc, eq, gt, gte, inArray, or, sql } from "@magister/db";
 
 import {
   createDb,
@@ -62,6 +62,24 @@ export class ExecutionEventRepository {
       where: eq(executionEvents.type, type),
       orderBy: [asc(executionEvents.occurredAt), asc(executionEvents.seq)],
       ...(typeof limit === "number" && limit > 0 ? { limit } : {}),
+    });
+  }
+
+  /**
+   * Time-windowed multi-type query for background workers (sentinel
+   * patrol / digest aggregation) that consume system-level events
+   * regardless of task. `since` is inclusive.
+   */
+  async listByTypesSince(types: readonly string[], since: Date, limit = 500) {
+    if (types.length === 0) return [];
+    const db = createDb();
+    return db.query.executionEvents.findMany({
+      where: and(
+        inArray(executionEvents.type, types as string[]),
+        gte(executionEvents.occurredAt, since),
+      ),
+      orderBy: [asc(executionEvents.occurredAt), asc(executionEvents.seq)],
+      limit,
     });
   }
 

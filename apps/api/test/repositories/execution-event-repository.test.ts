@@ -352,6 +352,57 @@ test("listLatestRequestEvents keeps stream deltas from different agents separate
   expect(events.map((event) => JSON.parse(event.payloadJson!).text)).toEqual(["leader ", "teammate"]);
 });
 
+test("listByTypesSince filters by type set and time window, sorted ascending", async () => {
+  const repo = new ExecutionEventRepository();
+  await repo.create({
+    id: "evt-window-old",
+    type: "sentinel.signal",
+    occurredAt: new Date("2026-07-13T08:00:00Z"),
+    payloadJson: "{}",
+  });
+  await repo.create({
+    id: "evt-window-in-2",
+    type: "digest.sent",
+    occurredAt: new Date("2026-07-14T10:00:00Z"),
+    payloadJson: "{}",
+  });
+  await repo.create({
+    id: "evt-window-in-1",
+    type: "sentinel.signal",
+    occurredAt: new Date("2026-07-14T09:00:00Z"),
+    payloadJson: "{}",
+  });
+  await repo.create({
+    id: "evt-window-wrong-type",
+    type: "leader.text",
+    taskId: "t-x",
+    roleRuntimeId: "run-x",
+    occurredAt: new Date("2026-07-14T09:30:00Z"),
+    payloadJson: "{}",
+  });
+
+  const events = await repo.listByTypesSince(
+    ["sentinel.signal", "digest.sent"],
+    new Date("2026-07-14T00:00:00Z"),
+  );
+  expect(events.map((e) => e.id)).toEqual(["evt-window-in-1", "evt-window-in-2"]);
+});
+
+test("listByTypesSince returns [] for empty type list and includes boundary timestamp", async () => {
+  const repo = new ExecutionEventRepository();
+  const boundary = new Date("2026-07-14T00:00:00Z");
+  await repo.create({
+    id: "evt-boundary",
+    type: "sentinel.signal",
+    occurredAt: boundary,
+    payloadJson: "{}",
+  });
+
+  expect(await repo.listByTypesSince([], boundary)).toEqual([]);
+  const events = await repo.listByTypesSince(["sentinel.signal"], boundary);
+  expect(events.map((e) => e.id)).toEqual(["evt-boundary"]);
+});
+
 test("deleteOlderCheckpoints keeps only latest N", async () => {
   const repo = new ExecutionEventRepository();
   for (let i = 1; i <= 5; i++) {
