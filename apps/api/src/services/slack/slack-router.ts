@@ -5,11 +5,16 @@ import { parseSlackConfig } from "../../integrations/slack/slack-config";
 import type { NormalizedSlackInteraction } from "../../integrations/slack/slack-event-normalizer";
 import { ChannelSessionRepository } from "../../repositories/channel-session-repository";
 import { ConversationBindingRepository } from "../../repositories/conversation-binding-repository";
+import { ExecutionEventRepository } from "../../repositories/execution-event-repository";
 import {
   getApproval as commandGetApproval,
   onApprovalCreated,
   type ApprovalRecord,
 } from "../command-approval-service";
+import {
+  DIGEST_ACTION_DISMISSED_EVENT_TYPE,
+  DIGEST_ACTION_TAKEN_EVENT_TYPE,
+} from "../digest-service";
 
 /**
  * Slack router — the Slack counterpart of feishu-router.ts, scoped to
@@ -233,10 +238,153 @@ export async function handleSlackBlockAction(
   }
 }
 
+export interface DigestActionDependencies {
+  eventRepository?: ExecutionEventRepository;
+  /** Injectable for tests; defaults to processTaskIntent. */
+  runIntent?: (input: {
+    prompt: string;
+    source: "web";
+    workspaceId: string;
+    createdBy: string;
+  }) => Promise<{ taskId: string }>;
+  /** Injectable for tests; `null` skips the ack reply. */
+  slackClient?: ReturnType<typeof buildSlackClientIfConfigured>;
+}
+
+/**
+ * Digest card button clicks (acted-on metric). Unlike approval buttons
+ * these carry a plain `{actionText}` value, not a signed envelope —
+ * clicking only records an event and (for "Do it") creates an ordinary
+ * task, both benign in a single-operator workspace.
+ *
+ * MAGISTER_DIGEST_OPERATOR_IDS (comma-separated Slack user ids), when
+ * set, restricts who may click: anyone else gets an in-thread refusal
+ * and no event/task. Unset = any channel member (single-operator
+ * deployments should post the digest to a private channel).
+ */
+export async function handleDigestAction(
+  interaction: NormalizedSlackInteraction,
+  dependencies: DigestActionDependencies = {},
+): Promise<void> {
+  const { event, messageTs } = interaction;
+  const actionId = event.content.actionId;
+  const eventRepo = dependencies.eventRepository ?? new ExecutionEventRepository();
+
+  const operatorIds = (process.env.MAGISTER_DIGEST_OPERATOR_IDS ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+  if (operatorIds.length > 0 && !operatorIds.includes(event.sender.platformUserId)) {
+    const client =
+      dependencies.slackClient !== undefined
+        ? dependencies.slackClient
+        : buildSlackClientIfConfigured(parseSlackConfig().botToken);
+    if (client && messageTs) {
+      try {
+        await client.postMessage({
+          channel: event.chatId,
+          text: "⛔ Digest actions are restricted to the configured operators.",
+          threadTs: messageTs,
+        });
+      } catch {
+        // ack is best-effort
+      }
+    }
+    return;
+  }
+
+  let actionText = "";
+  const rawValue = interaction.actions[0]?.value;
+  if (typeof rawValue === "string") {
+    try {
+      const parsed = JSON.parse(rawValue) as { actionText?: unknown };
+      if (typeof parsed.actionText === "string") actionText = parsed.actionText;
+    } catch {
+      // eslint-disable-next-line no-console
+      console.error(`[slack-router] digest action value is not valid JSON (action ${actionId})`);
+    }
+  }
+
+  const taken = actionId === "digest_act";
+  let spawnedTaskId: string | undefined;
+  if (taken && actionText) {
+    const runIntent =
+      dependencies.runIntent ??
+      (async (input: { prompt: string; source: "web"; workspaceId: string; createdBy: string }) => {
+        const { processTaskIntent } = await import("../process-task-intent-service");
+        return processTaskIntent(input);
+      });
+    let workspaceId = "workspace_main";
+    try {
+      const { WorkspaceRepository } = await import("../../repositories/workspace-repository");
+      workspaceId = (await new WorkspaceRepository().getDefault())?.id ?? workspaceId;
+    } catch {
+      // fall through to the legacy literal (same posture as the scheduler)
+    }
+    try {
+      const spawned = await runIntent({
+        prompt: actionText,
+        source: "web",
+        workspaceId,
+        createdBy: `digest:slack:${event.sender.platformUserId}`,
+      });
+      spawnedTaskId = spawned.taskId;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(
+        "[slack-router] digest_act task intake failed:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
+
+  await eventRepo.create({
+    id: `event_digest_${crypto.randomUUID()}`,
+    type: taken ? DIGEST_ACTION_TAKEN_EVENT_TYPE : DIGEST_ACTION_DISMISSED_EVENT_TYPE,
+    ...(spawnedTaskId ? { taskId: spawnedTaskId } : {}),
+    severity: "info",
+    occurredAt: new Date(),
+    payloadJson: JSON.stringify({
+      actionText,
+      actorId: event.sender.platformUserId,
+      ...(messageTs ? { messageTs } : {}),
+    }),
+  });
+
+  // Ack in-thread instead of chat.update: the digest holds several
+  // items/buttons and we no longer have its original blocks — an update
+  // would wipe the whole card for one click.
+  const client =
+    dependencies.slackClient !== undefined
+      ? dependencies.slackClient
+      : buildSlackClientIfConfigured(parseSlackConfig().botToken);
+  if (client && messageTs) {
+    const ack = taken
+      ? spawnedTaskId
+        ? `✅ Scheduled as task \`…${spawnedTaskId.slice(-8)}\``
+        : "⚠️ Couldn't schedule that action — check the API logs"
+      : "Dismissed";
+    try {
+      await client.postMessage({ channel: event.chatId, text: ack, threadTs: messageTs });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(
+        "[slack-router] digest ack reply failed:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
+}
+
 async function handleSlackBlockActionInner(
   interaction: NormalizedSlackInteraction,
 ): Promise<void> {
   const { event, messageTs } = interaction;
+  const actionId = event.content.actionId;
+  if (actionId === "digest_act" || actionId === "digest_dismiss") {
+    await handleDigestAction(interaction);
+    return;
+  }
   const envelopeString = (event.content.payload as Record<string, unknown> | undefined)?.envelope;
   if (typeof envelopeString !== "string") return;
 
